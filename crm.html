@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Master - Gestión PQR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Animaciones suaves */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chat-bubble { max-width: 80%; border-radius: 12px; padding: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+        .chat-admin { background-color: #dbeafe; color: #1e40af; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-user { background-color: #dcfce7; color: #166534; align-self: flex-end; border-bottom-right-radius: 2px; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans h-screen overflow-hidden">
+
+    <div id="login-section" class="flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 border-t-4 border-blue-600 fade-in">
+            <h2 class="text-3xl font-extrabold mb-2 text-center text-gray-800">CRM Master</h2>
+            <p class="text-center text-gray-500 mb-6 text-sm">Ingresa a tu cuenta</p>
+            
+            <input type="email" id="email-input" placeholder="correo@ejemplo.com" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="password" id="pass-input" placeholder="Contraseña" class="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold transition shadow-lg mb-4">
+                Ingresar
+            </button>
+
+            <div class="flex justify-between text-sm mt-4">
+                <a href="#" onclick="recuperarClave()" class="text-blue-500 hover:underline">Recuperar clave</a>
+                <a href="#" onclick="mostrarRegistro()" class="text-blue-600 font-bold hover:underline">Crear cuenta</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="register-section" class="hidden flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-green-600 fade-in overflow-y-auto max-h-[90vh]">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Nuevo Usuario</h2>
+            
+            <div class="space-y-3">
+                <input type="text" id="reg-nombre" placeholder="Nombre completo" class="w-full p-3 border rounded-lg">
+                <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full p-3 border rounded-lg">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="reg-inmueble" placeholder="Apto / Casa" class="p-3 border rounded-lg">
+                    <input type="tel" id="reg-celular" placeholder="Celular" class="p-3 border rounded-lg">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="reg-rol" class="p-3 border rounded-lg bg-gray-50">
+                        <option value="usuario">Residente</option>
+                        <option value="agente">Administrador</option>
+                    </select>
+                    <select id="reg-tipo-residente" class="p-3 border rounded-lg bg-gray-50">
+                        <option value="Propietario">Propietario</option>
+                        <option value="Arrendatario">Arrendatario</option>
+                    </select>
+                </div>
+
+                <input type="password" id="reg-pass" placeholder="Contraseña" class="w-full p-3 border rounded-lg">
+                
+                <button onclick="registrarUsuario()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700 transition mt-4 shadow-lg">
+                    Registrarme
+                </button>
+                <button onclick="mostrarLogin()" class="w-full text-gray-500 text-sm mt-2 hover:underline">
+                    Cancelar y volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden flex h-screen bg-gray-100">
+        <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-10">
+            <div class="p-6 text-center border-b border-slate-800">
+                <h1 class="text-2xl font-bold text-blue-400"><i class="fas fa-shield-alt mr-2"></i>CRM Master</h1>
+                <p class="text-xs text-gray-400 mt-1">Gestión Inteligente</p>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Menú</div>
+                
+                <button onclick="cargarDashboard()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                    <i class="fas fa-chart-pie w-6"></i> Panel Principal
+                </button>
+
+                <button id="btn-nuevo-pqr" onclick="abrirModalCrear()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-plus-circle w-6 text-green-400"></i> Nuevo Caso
+                </button>
+
+                <button id="btn-exportar" onclick="exportarExcel()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-file-excel w-6 text-green-400"></i> Exportar Datos
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center mb-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">U</div>
+                    <div class="ml-3">
+                        <p id="dash-nombre" class="text-sm font-bold">Usuario</p>
+                        <p id="dash-rol" class="text-xs text-gray-400 capitalize">Rol</p>
+                    </div>
+                </div>
+                <button onclick="cerrarSesion()" class="w-full bg-red-600/20 text-red-400 p-2 rounded hover:bg-red-600/40 text-sm transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8 relative">
+            <header class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Resumen de Actividad</h2>
+                <div class="flex items-center space-x-2">
+                   <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                   <span class="text-sm text-gray-500">Sistema en línea</span>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Total Casos</p>
+                        <p id="kpi-total" class="text-3xl font-extrabold text-gray-800 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-folder-open text-xl"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Pendientes</p>
+                        <p id="kpi-pendientes" class="text-3xl font-extrabold text-orange-500 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-clock text-xl"></i></div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Resueltos</p>
+                        <p id="kpi-resueltos" class="text-3xl font-extrabold text-green-500 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-check-circle text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-lg mb-4 text-gray-700">Casos Recientes</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="p-3 text-gray-500 font-semibold">Estado</th>
+                                    <th class="p-3 text-gray-500 font-semibold">Fecha</th>
+                                    <th class="p-3 text-gray-500 font-semibold">Usuario</th>
+                                    <th class="p-3 text-gray-500 font-semibold">Asunto</th>
+                                    <th class="p-3 text-gray-500 font-semibold"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
+                    <h3 class="font-bold text-lg mb-4 text-gray-700 w-full text-left">Distribución</h3>
+                    <div class="w-full h-64 relative">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-crear" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold">Nuevo Reporte</h3>
+                <button onclick="cerrarModal('modal-crear')" class="hover:text-gray-200"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tipo</label>
+                        <select id="pqr-tipo" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                            <option>Petición</option><option>Queja</option><option>Reclamo</option><option>Felicitación</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Categoría</label>
+                        <select id="pqr-categoria" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                            <option>Seguridad</option><option>Aseo</option><option>Convivencia</option><option>Mantenimiento</option><option>Administración</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Descripción</label>
+                    <textarea id="pqr-desc" rows="3" class="w-full p-2 border rounded mt-1" placeholder="Detalle su caso..."></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Evidencia (Foto/PDF)</label>
+                    <input type="file" id="pqr-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <button id="btn-enviar" onclick="crearPQR()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Enviar Caso</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalle" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <div>
+                    <h3 class="font-bold text-lg" id="det-titulo">Caso #000</h3>
+                    <span id="det-estado" class="text-xs px-2 py-0.5 rounded bg-gray-600">Cargando...</span>
+                </div>
+                <button onclick="cerrarModal('modal-detalle')" class="hover:text-gray-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="bg-gray-50 p-4 border-b shrink-0 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Solicitante</p>
+                    <p class="font-bold text-gray-700" id="det-usuario">...</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Categoría</p>
+                    <p class="font-bold text-gray-700" id="det-categoria">...</p>
+                </div>
+                <div class="col-span-2">
+                    <p class="text-xs text-gray-500 uppercase">Descripción Inicial</p>
+                    <p class="text-gray-700 italic" id="det-descripcion">...</p>
+                    <a id="det-link" href="#" target="_blank" class="text-blue-600 text-xs hidden mt-1 hover:underline"><i class="fas fa-paperclip"></i> Ver adjunto original</a>
+                </div>
+            </div>
+
+            <div id="chat-container" class="flex-1 p-4 overflow-y-auto bg-white flex flex-col space-y-3">
+                </div>
+
+            <div class="p-4 bg-gray-100 border-t shrink-0">
+                <div id="zona-respuesta">
+                    <div class="flex gap-2 mb-2">
+                         <select id="chat-nuevo-estado" class="p-2 text-sm border rounded hidden">
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Cerrado">Cerrar Caso</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escribe una respuesta...">
+                        <button onclick="enviarRespuesta()" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                <p id="zona-cerrada" class="hidden text-center text-red-500 font-bold py-2 bg-red-50 rounded">Este caso está cerrado.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
