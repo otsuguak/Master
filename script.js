@@ -2,26 +2,65 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 // --- 1. CONFIGURACIÓN DE SUPABASE ---
-// ¡REEMPLAZA ESTAS DOS LÍNEAS CON TUS DATOS!
-// Reemplaza con tu URL (la sacas de "API de datos")
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
-// Reemplaza con tu Clave publicable (la de tu foto)
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
-// Configuramos Supabase con parámetros explícitos para evitar bloqueos
+
 const supabase = createClient(supabaseUrl, supabaseKey);
-//const supabase = createClient(supabaseUrl, supabaseKey, {
-//    auth: {
-//        storage: window.localStorage,
-//        autoRefreshToken: true,
-//        persistSession: true,
-//        detectSessionInUrl: false
-//    }
-//});
+
 // Variables Globales
 let usuarioActual = null;
 let pqrSeleccionadoID = null;
 let chartInstance = null;
-let suscripcionTickets = null; // Para el Realtime de Supabase
+let suscripcionTickets = null; 
+
+// ==========================================
+//  LÓGICA DE INTERFAZ (UI) - PANTALLA DE CARGA
+// ==========================================
+
+function mostrarCargando() {
+    const pantalla = document.getElementById('pantalla-carga');
+    pantalla.classList.remove('hidden');
+    pantalla.classList.add('flex');
+}
+
+function ocultarCargando() {
+    const pantalla = document.getElementById('pantalla-carga');
+    pantalla.classList.remove('flex');
+    pantalla.classList.add('hidden');
+}
+
+function mostrarLogin() {
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('register-section').classList.add('hidden');
+}
+
+function mostrarDashboard() {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('register-section').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    document.getElementById('dash-nombre').innerText = usuarioActual.nombre;
+    document.getElementById('dash-rol').innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
+
+    if (usuarioActual.rol === 'agente') {
+        document.getElementById('btn-nuevo-pqr').classList.add('hidden');
+        document.getElementById('btn-exportar').classList.remove('hidden');
+        document.getElementById('chat-nuevo-estado').classList.remove('hidden');
+    } else {
+        document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
+        document.getElementById('btn-exportar').classList.add('hidden');
+        document.getElementById('chat-nuevo-estado').classList.add('hidden');
+    }
+
+    cargarDatosRealtime();
+}
+
+window.mostrarRegistro = () => {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('register-section').classList.remove('hidden');
+};
+window.mostrarLogin = () => mostrarLogin();
 
 // ==========================================
 //  SISTEMA DE AUTENTICACIÓN
@@ -59,15 +98,12 @@ window.iniciarSesion = async () => {
     console.log("1. Botón presionado");
     const email = document.getElementById('email-input').value;
     const pass = document.getElementById('pass-input').value;
-    
-    // Seleccionamos el botón para cambiarle el texto
     const btn = document.querySelector('#login-section button'); 
 
     if(!email || !pass) return Swal.fire('Error', 'Ingresa correo y contraseña', 'warning');
 
-    // Desactivamos el botón para evitar doble clic y avisamos que está cargando
     btn.disabled = true;
-    btn.innerText = "Conectando...";
+    mostrarCargando(); // <-- Activamos pantalla de carga
 
     try {
         console.log("2. Autenticando con Supabase...");
@@ -76,23 +112,20 @@ window.iniciarSesion = async () => {
             password: pass,
         });
 
-        console.log("3. Respuesta de Supabase:", data, error);
-
         if (error) {
             btn.disabled = false;
-            btn.innerText = "Ingresar";
             if (error.message.includes("Email not confirmed")) {
                 Swal.fire('Atención', 'Debes confirmar tu correo electrónico. Revisa tu bandeja.', 'warning');
             } else {
                 Swal.fire('Error', 'Correo o contraseña incorrectos', 'error');
             }
         }
-        // Si no hay error, el sistema automático (onAuthStateChange) tomará el control
     } catch (err) {
         console.error("Error grave de conexión:", err);
         btn.disabled = false;
-        btn.innerText = "Ingresar";
         Swal.fire('Error', 'Falla de conexión con el servidor', 'error');
+    } finally {
+        ocultarCargando(); // <-- Apagamos pantalla de carga
     }
 };
 
@@ -104,6 +137,8 @@ window.registrarUsuario = async () => {
     const inmueble = document.getElementById('reg-inmueble').value;
 
     if (!email || !pass || !nombre) return Swal.fire('Campos vacíos', 'Completa todo el formulario', 'warning');
+
+    mostrarCargando(); // <-- Activamos pantalla de carga
 
     try {
         // 1. Crear usuario en Auth de Supabase
@@ -119,15 +154,8 @@ window.registrarUsuario = async () => {
              const { error: dbError } = await supabase
                 .from('usuarios')
                 .insert([
-                    { 
-                        id: authData.user.id, 
-                        email: email, 
-                        nombre: nombre, 
-                        rol: rol, 
-                        inmueble: inmueble 
-                    }
+                    { id: authData.user.id, email: email, nombre: nombre, rol: rol, inmueble: inmueble }
                 ]);
-            
             if (dbError) throw dbError;
         }
 
@@ -136,8 +164,6 @@ window.registrarUsuario = async () => {
 
     } catch (error) {
         console.error("Error original de Supabase:", error);
-        
-        // Nuestro traductor automático de errores
         let mensajeEspanol = "Ocurrió un error inesperado al registrar el usuario.";
 
         if (error.message.includes("Password should be at least")) {
@@ -149,7 +175,6 @@ window.registrarUsuario = async () => {
         } else if (error.message.includes("Invalid email")) {
             mensajeEspanol = "El formato del correo electrónico no es válido.";
         } else {
-            // Si es un error raro que no hemos traducido, muestra el original
             mensajeEspanol = error.message; 
         }
 
@@ -159,12 +184,16 @@ window.registrarUsuario = async () => {
             icon: 'success',
             confirmButtonColor: '#2563eb'
         });
+    } finally {
+        ocultarCargando(); // <-- Apagamos pantalla de carga
     }
 };
 
 window.cerrarSesion = async () => {
-    if(suscripcionTickets) supabase.removeChannel(suscripcionTickets); // Apagar listener
+    mostrarCargando();
+    if(suscripcionTickets) supabase.removeChannel(suscripcionTickets);
     await supabase.auth.signOut();
+    ocultarCargando();
 };
 
 window.recuperarClave = async () => {
@@ -176,73 +205,39 @@ window.recuperarClave = async () => {
     });
 
     if (email) {
+        mostrarCargando();
         const { error } = await supabase.auth.resetPasswordForEmail(email);
-        if (error.message.includes("Email not confirmed")) {
-        Swal.fire('Atención', 'Debes confirmar tu correo electrónico primero. Revisa tu bandeja de entrada.', 'warning');
-    } else {
-        Swal.fire('Error', 'Correo o contraseña incorrectos', 'error');
-    }
+        ocultarCargando();
+        
+        if (error) {
+            Swal.fire('Error', error.message, 'error');
+        } else {
+            Swal.fire('Enviado', 'Revisa tu correo para recuperar la contraseña', 'success');
+        }
     }
 }
-
-// ==========================================
-//  LÓGICA DE INTERFAZ (UI)
-// ==========================================
-
-function mostrarLogin() {
-    document.getElementById('login-section').classList.remove('hidden');
-    document.getElementById('dashboard').classList.add('hidden');
-    document.getElementById('register-section').classList.add('hidden');
-}
-
-function mostrarDashboard() {
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('register-section').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-
-    document.getElementById('dash-nombre').innerText = usuarioActual.nombre;
-    document.getElementById('dash-rol').innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
-
-    if (usuarioActual.rol === 'agente') {
-        document.getElementById('btn-nuevo-pqr').classList.add('hidden');
-        document.getElementById('btn-exportar').classList.remove('hidden');
-        document.getElementById('chat-nuevo-estado').classList.remove('hidden');
-    } else {
-        document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
-        document.getElementById('btn-exportar').classList.add('hidden');
-        document.getElementById('chat-nuevo-estado').classList.add('hidden');
-    }
-
-    cargarDatosRealtime();
-}
-
-window.mostrarRegistro = () => {
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('register-section').classList.remove('hidden');
-};
-window.mostrarLogin = () => mostrarLogin();
 
 // ==========================================
 //  LÓGICA DEL NEGOCIO (PQRS) CON SUPABASE
 // ==========================================
 
 async function cargarDatosRealtime() {
-    // 1. Carga inicial de datos
     let query = supabase.from('tickets').select('*').order('fecha', { ascending: false });
     
-    // Si no es admin, filtramos por su ID
     if (usuarioActual.rol !== 'agente') {
         query = query.eq('usuario_id', usuarioActual.id);
     }
 
-    const { data: tickets, error } = await query;
-    
-    if(!error && tickets) {
-        procesarYRenderizarTickets(tickets);
+    mostrarCargando();
+    try {
+        const { data: tickets, error } = await query;
+        if(!error && tickets) {
+            procesarYRenderizarTickets(tickets);
+        }
+    } finally {
+        ocultarCargando();
     }
 
-    // 2. Suscripción a cambios en Tiempo Real
-    // ¡Esta es la magia de Supabase Realtime!
     if(suscripcionTickets) supabase.removeChannel(suscripcionTickets);
 
     let channelFilter = '*';
@@ -254,18 +249,11 @@ async function cargarDatosRealtime() {
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
-        {
-          event: '*', // Escucha inserts, updates y deletes
-          schema: 'public',
-          table: 'tickets',
-          filter: channelFilter
-        },
+        { event: '*', schema: 'public', table: 'tickets', filter: channelFilter },
         async (payload) => {
-          // Cuando algo cambia, volvemos a pedir la lista completa (forma fácil de mantener sincronizado)
           const { data: newData } = await query;
           if(newData) procesarYRenderizarTickets(newData);
           
-          // Si el detalle abierto se actualizó, recargarlo
           if(pqrSeleccionadoID && payload.new && payload.new.id === pqrSeleccionadoID){
               renderizarModalDetalle(payload.new);
           }
@@ -292,7 +280,7 @@ function actualizarTabla(tickets) {
     tbody.innerHTML = '';
 
     if (tickets.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay casos registrados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No hay casos registrados.</td></tr>';
         return;
     }
 
@@ -306,6 +294,7 @@ function actualizarTabla(tickets) {
 
         const row = `
             <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
+                <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">#${t.id.slice(0, 8)}</td>
                 <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
                 <td class="p-3 text-gray-600">${fecha}</td>
                 <td class="p-3 font-medium">${t.nombre_usuario}</td>
@@ -323,7 +312,6 @@ function actualizarTabla(tickets) {
 }
 
 window.crearPQR = async () => {
-    const btn = document.getElementById('btn-enviar');
     const tipo = document.getElementById('pqr-tipo').value;
     const cat = document.getElementById('pqr-categoria').value;
     const desc = document.getElementById('pqr-desc').value;
@@ -331,8 +319,7 @@ window.crearPQR = async () => {
 
     if (!desc) return Swal.fire('Atención', 'Describe tu caso', 'warning');
 
-    btn.disabled = true;
-    btn.innerText = "Subiendo...";
+    mostrarCargando(); // <-- Pantalla de carga activa
 
     try {
         let fileUrl = null;
@@ -347,7 +334,6 @@ window.crearPQR = async () => {
               
             if(error) throw error;
             
-            // Obtener URL pública
             const { data: { publicUrl } } = supabase.storage
               .from('evidencias')
               .getPublicUrl(fileName);
@@ -372,7 +358,7 @@ window.crearPQR = async () => {
                 descripcion: desc,
                 adjunto_url: fileUrl,
                 estado: 'Abierto',
-                historial: nuevoHistorial // JSONB nativo
+                historial: nuevoHistorial 
             }
         ]);
 
@@ -387,8 +373,7 @@ window.crearPQR = async () => {
         console.error(e);
         Swal.fire('Error', 'No se pudo crear el caso', 'error');
     } finally {
-        btn.disabled = false;
-        btn.innerText = "Enviar Caso";
+        ocultarCargando(); // <-- Apagar pantalla de carga
     }
 };
 
@@ -397,9 +382,13 @@ window.abrirDetalle = async (id) => {
     const modal = document.getElementById('modal-detalle');
     modal.classList.remove('hidden');
 
-    // Obtener datos iniciales
-    const { data, error } = await supabase.from('tickets').select('*').eq('id', id).single();
-    if(data) renderizarModalDetalle(data);
+    mostrarCargando();
+    try {
+        const { data, error } = await supabase.from('tickets').select('*').eq('id', id).single();
+        if(data) renderizarModalDetalle(data);
+    } finally {
+        ocultarCargando();
+    }
 };
 
 function renderizarModalDetalle(data) {
@@ -463,8 +452,8 @@ window.enviarRespuesta = async () => {
 
     const nuevoEstado = document.getElementById('chat-nuevo-estado').value;
     
+    mostrarCargando(); // <-- Pantalla de carga activa
     try {
-        // 1. Obtener historial actual
         const { data: ticket, error: getError } = await supabase
             .from('tickets')
             .select('historial')
@@ -475,7 +464,6 @@ window.enviarRespuesta = async () => {
 
         let historial = ticket.historial || [];
         
-        // 2. Agregar nuevo mensaje
         historial.push({
             autor: usuarioActual.nombre,
             rol: usuarioActual.rol,
@@ -483,13 +471,11 @@ window.enviarRespuesta = async () => {
             fecha: new Date().toISOString()
         });
 
-        // 3. Preparar update
         let updateData = { historial: historial };
         if (usuarioActual.rol === 'agente') {
             updateData.estado = nuevoEstado;
         }
 
-        // 4. Actualizar tabla
         const { error: updateError } = await supabase
             .from('tickets')
             .update(updateData)
@@ -502,6 +488,8 @@ window.enviarRespuesta = async () => {
     } catch (e) {
         console.error(e);
         Swal.fire('Error', 'No se pudo enviar el mensaje', 'error');
+    } finally {
+        ocultarCargando(); // <-- Apagar pantalla de carga
     }
 }
 
