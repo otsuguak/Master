@@ -4,8 +4,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
 
-// 1. ALMACENAMIENTO A PRUEBA DE BALAS (Bypass de Edge)
-// Usamos sessionStorage (por pestaña) y RAM, evitando el localStorage que Edge bloquea.
+// 1. ALMACENAMIENTO SEGURO
 const RAM = {};
 const almacenamientoSeguro = {
     getItem: (key) => {
@@ -22,7 +21,6 @@ const almacenamientoSeguro = {
     }
 };
 
-// 2. INICIALIZACIÓN DIRECTA (Apagamos los candados conflictivos)
 const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: {
         storage: almacenamientoSeguro,
@@ -93,75 +91,36 @@ window.mostrarRegistro = () => {
 window.mostrarLogin = () => mostrarLogin();
 
 // ==========================================
-//  SISTEMA DE AUTENTICACIÓN ANTI-CONGELAMIENTO
+//  SISTEMA DE AUTENTICACIÓN DIRECTO (SIN EVENTOS TÓXICOS)
 // ==========================================
-let procesandoSesion = false; // Candado para evitar que F5 dispare eventos dobles
 
-supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log("--> Evento Auth:", event);
-
-    // ¡AQUÍ ESTÁ LA MAGIA! Le damos permiso al evento SIGNED_OUT para actuar
-    if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
-
-    if (!session) {
-        usuarioActual = null;
-        mostrarLogin();
-        return;
-    }
-    
-
-    // Si ya estamos procesando la entrada, ignoramos para no chocar
-    if (procesandoSesion) return;
-    procesandoSesion = true;
-
-    mostrarCargando();
-    
+// Función central para buscar perfil y entrar
+async function procesarEntradaUsuario(user) {
     try {
-        // Truco maestro: Le damos a Supabase máximo 6 segundos. Si se queda mudo, explota a propósito.
-        const tiempoLimite = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("TIEMPO_AGOTADO")), 6000)
-        );
-
-        const peticionBD = supabase
+        const { data: userData, error: dbError } = await supabase
             .from('usuarios')
             .select('*')
-            .eq('id', session.user.id)
-            .single();
+            .eq('id', user.id)
+            .maybeSingle();
 
-        // Ejecutamos una "carrera" entre la respuesta de la base de datos y el cronómetro
-        const { data, error } = await Promise.race([peticionBD, tiempoLimite]);
+        if (dbError) throw dbError;
 
-        if (error) throw error;
-
-        if (data) {
-            usuarioActual = data;
+        if (userData) {
+            usuarioActual = userData;
             mostrarDashboard();
         } else {
-            throw new Error("Perfil no encontrado en BD");
+            Swal.fire("Error", "Tu sesión es válida, pero no tienes perfil en la base de datos.", "error");
+            await supabase.auth.signOut();
+            mostrarLogin();
         }
     } catch (err) {
-        console.error("Fallo al cargar la sesión:", err);
-        
-        // Si el cronómetro ganó, la red o Supabase se quedaron colgados (el limbo)
-        if (err.message === "TIEMPO_AGOTADO") {
-            console.warn("Supabase se atascó. Forzando reinicio de la caché...");
-            Swal.fire("Aviso", "La conexión tardó demasiado. Por favor, intenta ingresar de nuevo.", "warning");
-        } else {
-            Swal.fire("Error", "No se pudo cargar tu perfil.", "error");
-        }
-        
-        // Limpieza "nuclear" para destrabar el navegador por completo
-        window.sessionStorage.clear();
-        window.localStorage.clear();
-        try { await supabase.auth.signOut(); } catch(e) {}
-        
-        mostrarLogin(); // Te salva de la pantalla negra
-    } finally {
-        procesandoSesion = false; // Soltamos el candado
-        ocultarCargando(); // Garantía absoluta de apagar el spinner
+        console.error("Fallo al buscar datos del usuario:", err);
+        Swal.fire("Error de Conexión", "No pudimos cargar tus datos. Revisa tu internet.", "error");
+        mostrarLogin();
     }
-});
+}
 
+// 1. INICIAR SESIÓN (Flujo Lineal)
 window.iniciarSesion = async () => {
     const email = document.getElementById('email-input').value;
     const pass = document.getElementById('pass-input').value;
@@ -171,19 +130,71 @@ window.iniciarSesion = async () => {
     mostrarCargando();
     
     try {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        // Paso A: Login
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
         if (error) throw error;
-        // Si no hay error, el onAuthStateChange tomará el control automáticamente
+        
+        // Paso B: Cargar perfil de inmediato
+        if (data.user) {
+            await procesarEntradaUsuario(data.user);
+        }
     } catch (err) {
-        ocultarCargando();
         console.error("Fallo Login:", err);
         if (err.message && err.message.includes("Invalid login")) {
             Swal.fire('Error', 'Correo o contraseña incorrectos', 'error');
         } else {
             Swal.fire('Error', 'Falla de conexión con el servidor', 'error');
         }
+    } finally {
+        ocultarCargando(); // Garantía inquebrantable de apagar el spinner
     }
 };
+
+// 2. CERRAR SESIÓN (A prueba de balas)
+window.cerrarSesion = async () => {
+    mostrarCargando();
+    try {
+        if(suscripcionTickets) supabase.removeChannel(suscripcionTickets);
+        await supabase.auth.signOut();
+    } catch (e) {
+        console.warn("Fallo silencioso en el servidor al cerrar sesión, forzando salida local:", e);
+    } finally {
+        // El bloque "finally" asegura que ESTO SIEMPRE SE EJECUTE, falle o no la red
+        usuarioActual = null;
+        window.sessionStorage.clear(); // Limpiamos rastro local
+        mostrarLogin();
+        ocultarCargando();
+    }
+};
+
+// 3. AUTO-LOGIN (Cuando se recarga la página)
+async function inicializarApp() {
+    mostrarCargando();
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+            await procesarEntradaUsuario(session.user);
+        } else {
+            mostrarLogin();
+        }
+    } catch (e) {
+        mostrarLogin();
+    } finally {
+        ocultarCargando();
+    }
+}
+
+// 4. ESCUDO DE RESPALDO (Solo para cierres de sesión desde otra pestaña)
+supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+        usuarioActual = null;
+        mostrarLogin();
+    }
+});
+
+// ==========================================
+//  RESTO DE FUNCIONES (Registro, Recuperar Clave, PQR)
+// ==========================================
 
 window.registrarUsuario = async () => {
     const email = document.getElementById('reg-email').value;
@@ -241,13 +252,6 @@ window.registrarUsuario = async () => {
     }
 };
 
-window.cerrarSesion = async () => {
-    mostrarCargando();
-    if(suscripcionTickets) supabase.removeChannel(suscripcionTickets);
-    await supabase.auth.signOut();
-    ocultarCargando();
-};
-
 window.recuperarClave = async () => {
     const { value: email } = await Swal.fire({
         title: 'Recuperar Contraseña',
@@ -268,10 +272,6 @@ window.recuperarClave = async () => {
         }
     }
 }
-
-// ==========================================
-//  LÓGICA DEL NEGOCIO (PQRS) CON SUPABASE
-// ==========================================
 
 async function cargarDatosRealtime() {
     let query = supabase.from('tickets').select('*').order('fecha', { ascending: false });
@@ -371,7 +371,6 @@ window.crearPQR = async () => {
     try {
         let fileUrl = null;
 
-        // Subir archivo a Supabase Storage (¡COMPLETO Y SIN RECORTES!)
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             const fileName = `${Date.now()}_${file.name}`;
@@ -539,10 +538,6 @@ window.enviarRespuesta = async () => {
     }
 }
 
-// ==========================================
-//  UTILIDADES
-// ==========================================
-
 function actualizarKPIs(stats, total) {
     document.getElementById('kpi-total').innerText = total;
     document.getElementById('kpi-pendientes').innerText = stats.abiertos + stats.proceso;
@@ -584,3 +579,9 @@ window.cerrarModal = (id) => {
 window.exportarExcel = async () => {
     Swal.fire('Información', 'Para habilitar exportación, integraremos SheetJS en la siguiente fase Master.', 'info');
 };
+
+// ==========================================
+//  ¡ARRANQUE INICIAL DE LA APP!
+// ==========================================
+// Esta línea final verifica la sesión al abrir/recargar la página
+inicializarApp();
