@@ -5,7 +5,16 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// --- 1. CONFIGURACIÓN DE SUPABASE BLINDADA ---
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'supabase.auth.token',
+    storage: window.localStorage, // Forzamos el uso de memoria local estándar
+    detectSessionInUrl: true,
+    flowType: 'pkce' // Este modo es el preferido por navegadores estrictos como Edge
+  }
+});
 
 // Variables Globales
 let usuarioActual = null;
@@ -293,22 +302,15 @@ function actualizarTabla(tickets) {
         const fecha = new Date(t.fecha).toLocaleDateString();
 
         const row = `
-            <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
-                <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">#${t.id.slice(0, 8)}</td>
-                <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
-                <td class="p-3 text-gray-600">${fecha}</td>
-                <td class="p-3 font-medium">${t.nombre_usuario}</td>
-                <td class="p-3 text-gray-600">
-                    <span class="block text-xs font-bold text-blue-500">${t.categoria}</span>
-                    ${t.tipo}
-                </td>
-                <td class="p-3 text-right">
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                </td>
+        <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
+            <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">
+                #${t.id.slice(0, 8)}
+            </td>
+            <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
             </tr>
-        `;
-        tbody.innerHTML += row;
-    });
+    `;
+    tbody.innerHTML += row;
+});
 }
 
 window.crearPQR = async () => {
