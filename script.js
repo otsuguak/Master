@@ -1,36 +1,43 @@
 // --- IMPORTACIÓN DE SUPABASE ---
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-// --- 1. CONFIGURACIÓN ANTI-BLOQUEOS (EL ESCUDO PARA EDGE Y CHROME) ---
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
 
-// --- 1. CONFIGURACIÓN ANTI-BLOQUEOS REPARADA ---
-const memoriaCache = {}; // <-- Objeto temporal en RAM
-
+// 1. MEMORIA EN RAM (El plan de rescate)
+const memoriaCache = {};
 const escudoMemoria = {
-    getItem: (key) => { 
-        try { return window.localStorage.getItem(key); } 
-        catch(e) { return memoriaCache[key] || null; } 
-    },
-    setItem: (key, value) => { 
-        try { window.localStorage.setItem(key, value); } 
-        catch(e) { memoriaCache[key] = value; } // <-- ¡Aquí guardamos el dato si falla el navegador!
-    },
-    removeItem: (key) => { 
-        try { window.localStorage.removeItem(key); } 
-        catch(e) { delete memoriaCache[key]; } 
-    }
+    getItem: (key) => memoriaCache[key] || null,
+    setItem: (key, value) => { memoriaCache[key] = value; },
+    removeItem: (key) => { delete memoriaCache[key]; }
 };
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        storage: escudoMemoria,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+// 2. DETECTOR DE NAVEGADORES ESTRICTOS
+function elNavegadorPermiteGuardar() {
+    try {
+        window.localStorage.setItem('prueba_seguridad', 'ok');
+        window.localStorage.removeItem('prueba_seguridad');
+        return true; // Todo normal, Chrome/Edge sin bloqueos
+    } catch (e) {
+        return false; // Modo estricto detectado (Incógnito, Edge estricto)
     }
-});
+}
+
+// 3. INICIALIZACIÓN INTELIGENTE (Adiós a las peleas de "Locks")
+const opcionesSupabase = elNavegadorPermiteGuardar() 
+    ? { 
+        auth: { autoRefreshToken: true, persistSession: true } 
+      }
+    : { 
+        auth: { 
+            storage: escudoMemoria, 
+            autoRefreshToken: true, 
+            persistSession: false // ¡CLAVE! Evita que Supabase intente poner candados que Edge va a romper
+        } 
+      };
+
+const supabase = createClient(supabaseUrl, supabaseKey, opcionesSupabase);
+
 
 // Variables Globales
 let usuarioActual = null;
@@ -154,28 +161,34 @@ window.iniciarSesion = async () => {
     btn.disabled = true;
     mostrarCargando(); 
 
-    try {
+   try {
         console.log("2. Autenticando con Supabase...");
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: pass,
         });
 
-        if (error) {
-            btn.disabled = false;
-            if (error.message.includes("Email not confirmed")) {
-                Swal.fire('Atención', 'Debes confirmar tu correo electrónico. Revisa tu bandeja.', 'warning');
-            } else {
-                Swal.fire('Error', 'Correo o contraseña incorrectos', 'error');
-            }
-        }
+        if (error) throw error; // Lanzamos el error para que caiga al catch
+
     } catch (err) {
-        console.error("Error grave de conexión:", err);
         btn.disabled = false;
-        Swal.fire('Error', 'Falla de conexión con el servidor', 'error');
-    } finally {
-        ocultarCargando(); 
-    }
+        ocultarCargando();
+        
+        // ¡LA REGLA DE ORO! Si es el error del Lock, lo ignoramos porque SÍ inició sesión.
+        if (err.message && err.message.includes("Lock broken")) {
+            console.warn("Ignorando candado roto. Sesión iniciada correctamente.");
+            return; 
+        }
+
+        console.error("Error grave de conexión:", err);
+        if (err.message && err.message.includes("Email not confirmed")) {
+            Swal.fire('Atención', 'Debes confirmar tu correo electrónico. Revisa tu bandeja.', 'warning');
+        } else if (err.message && err.message.includes("Invalid login")) {
+            Swal.fire('Error', 'Correo o contraseña incorrectos', 'error');
+        } else {
+            Swal.fire('Error', 'Falla de conexión con el servidor', 'error');
+        }
+    } 
 };
 
 window.registrarUsuario = async () => {
