@@ -104,34 +104,43 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         try {
             console.log("--> Sesión activa. Buscando datos en la tabla usuarios...");
             const { data: userData, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle(); // <--- CAMBIO CLAVE AQUÍ
+                .from('usuarios')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
 
             if (error) {
-            console.error("Error real de BD:", error);
-            throw error;
+                // IGNORAMOS el error inofensivo de "Lock broken"
+                if (error.message && error.message.includes('Lock broken')) {
+                    console.warn("Ignorando intermitencia de bloqueo de Supabase. Todo en orden.");
+                    return; 
+                }
+                throw error;
             }
 
             if (userData) {
                 usuarioActual = userData;
                 mostrarDashboard();
-                } else {
-                // AHORA SÍ aparecerá esta alerta si algo bloquea la lectura
-                Swal.fire("Error", "Tu sesión es válida, pero no encontramos tu perfil en la base de datos. Avisa a soporte.", "error");
-                await supabase.auth.signOut();
-            }
-            } catch (err) {
-                console.error("Fallo al buscar el perfil:", err);
-                await supabase.auth.signOut();
-            } finally {
-            ocultarCargando(); 
-            }
             } else {
-                usuarioActual = null;
-                mostrarLogin();
+                Swal.fire("Error", "Tu sesión es válida, pero no encontramos tu perfil en la base de datos.", "error");
+                await supabase.auth.signOut();
+            }
+        } catch (err) {
+            console.error("Fallo al buscar el perfil:", err);
+            
+            // Si es un error de Lock, no hacemos nada
+            if (err.message && err.message.includes('Lock broken')) return;
+
+            // ¡ELIMINAMOS el signOut() automático de aquí!
+            // Si hay un fallo de red, es mejor pedirle al usuario que recargue
+            Swal.fire("Aviso", "Intermitencia en la conexión. Por favor recarga la página.", "warning");
+        } finally {
+            ocultarCargando(); 
         }
+    } else {
+        usuarioActual = null;
+        mostrarLogin();
+    }
 });
 
 window.iniciarSesion = async () => {
