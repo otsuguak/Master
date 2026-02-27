@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LumenGroup | CRM Master Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .text-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-glow {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(15,23,42,0) 70%);
+            top: -200px; left: 50%; transform: translateX(-50%); z-index: -1;
+        }
+        /* Clase para las animaciones mágicas desde JS */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body class="font-sans antialiased relative">
+    
+    <div class="bg-glow"></div>
+
+    <nav class="container mx-auto px-6 py-6 flex justify-between items-center relative z-10">
+        <div class="text-2xl font-bold tracking-tighter">
+            <i class="fa-solid fa-building-shield text-blue-500 mr-2"></i>Lumen<span class="text-gradient">Group</span>
+        </div>
+        <a href="crm.html" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-6 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_25px_rgba(59,130,246,0.7)] hover:-translate-y-1">
+            Ingresar al CRM <i class="fa-solid fa-arrow-right ml-2"></i>
+        </a>
+    </nav>
+
+    <main class="container mx-auto px-6 pt-20 pb-24 text-center relative z-10 reveal">
+        <div class="inline-block py-1 px-3 rounded-full bg-slate-800 border border-slate-700 text-sm text-blue-400 font-medium mb-6">
+            <i class="fa-solid fa-cloud text-xs mr-2"></i> Impulsado por Supabase & PostgreSQL
+        </div>
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+            Gestión Residencial <br /> Elevada a la <span class="text-gradient">Nube</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-slate-400 mb-10 max-w-3xl mx-auto">
+            El sistema Master definitivo para copropiedades. PQRs en tiempo real, seguridad de grado militar y base de datos relacional para un control absoluto.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="crm.html" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-8 rounded-xl text-lg transition-transform transform hover:scale-105 shadow-lg shadow-blue-500/30">
+                Iniciar Sesión <i class="fa-solid fa-user-shield ml-2"></i>
+            </a>
+        </div>
+    </main>
+
+    <section class="container mx-auto px-6 py-20 border-t border-slate-800">
+        <div class="text-center mb-16 reveal">
+            <h2 class="text-3xl font-bold mb-4">Poder <span class="text-gradient">Master</span> en tus manos</h2>
+            <p class="text-slate-400">Diseñado exclusivamente para la máxima eficiencia administrativa.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors reveal">
+                <div class="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-bolt text-2xl text-blue-400"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Tiempo Real</h3>
+                <p class="text-slate-400 leading-relaxed">Sincronización instantánea de PQRs. Si un residente crea un caso, lo verás aparecer en tu panel sin recargar la página.</p>
+            </div>
+
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-purple-500/50 transition-colors reveal" style="transition-delay: 100ms;">
+                <div class="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-database text-2xl text-purple-400"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">PostgreSQL Nativo</h3>
+                <p class="text-slate-400 leading-relaxed">Despídete del almacenamiento local. Tus datos ahora viven en una arquitectura de bases de datos profesional, robusta e inquebrantable.</p>
+            </div>
+
+            <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-indigo-500/50 transition-colors reveal" style="transition-delay: 200ms;">
+                <div class="w-14 h-14 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-lock text-2xl text-indigo-400"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Seguridad RLS</h3>
+                <p class="text-slate-400 leading-relaxed">Autenticación encriptada en la nube. Solo los residentes verificados tienen acceso a la plataforma.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-800 py-8 text-center text-slate-500 text-sm reveal">
+        <p>&copy; 2026 LumenGroup CRM Master. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="pagina.js"></script>
+</body>
+</html>
