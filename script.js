@@ -100,49 +100,55 @@ window.mostrarRegistro = () => {
 window.mostrarLogin = () => mostrarLogin();
 
 // ==========================================
-//  SISTEMA DE AUTENTICACIÓN
+//  SISTEMA DE AUTENTICACIÓN BLINDADO (V.FINAL)
 // ==========================================
 
 supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log("--> Evento de seguridad detectado:", event);
+    console.log("--> Evento Auth detectado:", event);
+
+    // Si la página apenas carga y no hay sesión, mostramos el login de inmediato
+    if (event === 'INITIAL_SESSION' && !session) {
+        mostrarLogin();
+        return;
+    }
     
     if (session) {
         mostrarCargando();
         try {
-            console.log("--> Sesión activa. Buscando datos en la tabla usuarios...");
-            const { data: userData, error } = await supabase
+            const { data: userData, error: dbError } = await supabase
                 .from('usuarios')
                 .select('*')
                 .eq('id', session.user.id)
                 .maybeSingle();
 
-            if (error) {
-                // IGNORAMOS el error inofensivo de "Lock broken"
-                if (error.message && error.message.includes('Lock broken')) {
-                    console.warn("Ignorando intermitencia de bloqueo de Supabase. Todo en orden.");
-                    return; 
-                }
-                throw error;
+            // Ignoramos el molesto y falso error de "Lock" de Supabase
+            if (dbError && dbError.message && dbError.message.includes('Lock')) {
+                console.warn("Ignorando falso error de Lock de BD. Continuando...");
+            } else if (dbError) {
+                throw dbError; // Si es un error real, lo lanzamos al catch
             }
 
             if (userData) {
                 usuarioActual = userData;
                 mostrarDashboard();
             } else {
-                Swal.fire("Error", "Tu sesión es válida, pero no encontramos tu perfil en la base de datos.", "error");
-                await supabase.auth.signOut();
+                Swal.fire("Error", "Sesión iniciada, pero no tienes un perfil asignado en la base de datos.", "error");
+                throw new Error("Usuario sin perfil en BD"); 
             }
-        } catch (err) {
-            console.error("Fallo al buscar el perfil:", err);
-            
-            // Si es un error de Lock, no hacemos nada
-            if (err.message && err.message.includes('Lock broken')) return;
 
-            // ¡ELIMINAMOS el signOut() automático de aquí!
-            // Si hay un fallo de red, es mejor pedirle al usuario que recargue
-            Swal.fire("Aviso", "Intermitencia en la conexión. Por favor recarga la página.", "warning");
+        } catch (err) {
+            console.error("Fallo general de sesión:", err);
+            
+            // EL SECRETO: Envolvemos el signOut para que NO haga cortocircuito si Edge lo bloquea
+            try { 
+                await supabase.auth.signOut(); 
+            } catch (signOutErr) { 
+                console.warn("Fallo silencioso al cerrar sesión:", signOutErr); 
+            }
+            
+            mostrarLogin(); // Ahora SÍ estamos seguros de que volverá al login
         } finally {
-            ocultarCargando(); 
+            ocultarCargando(); // Garantizamos al 100% que la pantalla negra desaparece
         }
     } else {
         usuarioActual = null;
