@@ -100,13 +100,15 @@ let procesandoSesion = false; // Candado para evitar que F5 dispare eventos dobl
 supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("--> Evento Auth:", event);
 
-    if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
+    // ¡AQUÍ ESTÁ LA MAGIA! Le damos permiso al evento SIGNED_OUT para actuar
+    if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
 
     if (!session) {
         usuarioActual = null;
         mostrarLogin();
         return;
     }
+    
 
     // Si ya estamos procesando la entrada, ignoramos para no chocar
     if (procesandoSesion) return;
