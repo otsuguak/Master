@@ -5,11 +5,22 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
 
-// Nuestro escudo de memoria para evitar que la página se congele si el navegador bloquea
+// --- 1. CONFIGURACIÓN ANTI-BLOQUEOS REPARADA ---
+const memoriaCache = {}; // <-- Objeto temporal en RAM
+
 const escudoMemoria = {
-    getItem: (key) => { try { return window.localStorage.getItem(key); } catch(e) { return null; } },
-    setItem: (key, value) => { try { window.localStorage.setItem(key, value); } catch(e) {} },
-    removeItem: (key) => { try { window.localStorage.removeItem(key); } catch(e) {} }
+    getItem: (key) => { 
+        try { return window.localStorage.getItem(key); } 
+        catch(e) { return memoriaCache[key] || null; } 
+    },
+    setItem: (key, value) => { 
+        try { window.localStorage.setItem(key, value); } 
+        catch(e) { memoriaCache[key] = value; } // <-- ¡Aquí guardamos el dato si falla el navegador!
+    },
+    removeItem: (key) => { 
+        try { window.localStorage.removeItem(key); } 
+        catch(e) { delete memoriaCache[key]; } 
+    }
 };
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -93,30 +104,34 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         try {
             console.log("--> Sesión activa. Buscando datos en la tabla usuarios...");
             const { data: userData, error } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+            .from('usuarios')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle(); // <--- CAMBIO CLAVE AQUÍ
 
-            if (error) throw error;
+            if (error) {
+            console.error("Error real de BD:", error);
+            throw error;
+            }
 
             if (userData) {
                 usuarioActual = userData;
                 mostrarDashboard();
-            } else {
-                Swal.fire("Error", "No se encontró tu perfil en la base de datos", "error");
+                } else {
+                // AHORA SÍ aparecerá esta alerta si algo bloquea la lectura
+                Swal.fire("Error", "Tu sesión es válida, pero no encontramos tu perfil en la base de datos. Avisa a soporte.", "error");
                 await supabase.auth.signOut();
             }
-        } catch (err) {
-            console.error("Fallo al buscar el perfil:", err);
-            await supabase.auth.signOut();
-        } finally {
-            ocultarCargando(); // Pase lo que pase, quitamos la pantalla de carga
+            } catch (err) {
+                console.error("Fallo al buscar el perfil:", err);
+                await supabase.auth.signOut();
+            } finally {
+            ocultarCargando(); 
+            }
+            } else {
+                usuarioActual = null;
+                mostrarLogin();
         }
-    } else {
-        usuarioActual = null;
-        mostrarLogin();
-    }
 });
 
 window.iniciarSesion = async () => {
