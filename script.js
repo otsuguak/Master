@@ -8,11 +8,10 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // --- 1. CONFIGURACIÓN DE SUPABASE BLINDADA ---
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
+    storage: window.localStorage, // Forzamos el uso de la memoria estándar
+    autoRefreshToken: true,
     persistSession: true,
-    storageKey: 'supabase.auth.token',
-    storage: window.localStorage, // Forzamos el uso de memoria local estándar
-    detectSessionInUrl: true,
-    flowType: 'pkce' // Este modo es el preferido por navegadores estrictos como Edge
+    detectSessionInUrl: true
   }
 });
 
