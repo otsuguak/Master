@@ -93,14 +93,14 @@ window.mostrarRegistro = () => {
 window.mostrarLogin = () => mostrarLogin();
 
 // ==========================================
-//  SISTEMA DE AUTENTICACIÓN SIMPLIFICADO
+//  SISTEMA DE AUTENTICACIÓN ANTI-CONGELAMIENTO
 // ==========================================
+let procesandoSesion = false; // Candado para evitar que F5 dispare eventos dobles
 
 supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("--> Evento Auth:", event);
 
-    // Ignoramos eventos basura para evitar bucles de carga
-    if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
+    if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
 
     if (!session) {
         usuarioActual = null;
@@ -108,14 +108,26 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         return;
     }
 
+    // Si ya estamos procesando la entrada, ignoramos para no chocar
+    if (procesandoSesion) return;
+    procesandoSesion = true;
+
     mostrarCargando();
     
     try {
-        const { data, error } = await supabase
+        // Truco maestro: Le damos a Supabase máximo 6 segundos. Si se queda mudo, explota a propósito.
+        const tiempoLimite = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("TIEMPO_AGOTADO")), 6000)
+        );
+
+        const peticionBD = supabase
             .from('usuarios')
             .select('*')
             .eq('id', session.user.id)
             .single();
+
+        // Ejecutamos una "carrera" entre la respuesta de la base de datos y el cronómetro
+        const { data, error } = await Promise.race([peticionBD, tiempoLimite]);
 
         if (error) throw error;
 
@@ -123,17 +135,28 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             usuarioActual = data;
             mostrarDashboard();
         } else {
-            throw new Error("No hay perfil en la base de datos");
+            throw new Error("Perfil no encontrado en BD");
         }
     } catch (err) {
-        console.error("Fallo al cargar perfil:", err);
-        Swal.fire("Error", "No se pudo cargar tu perfil. Contacta a soporte.", "error");
+        console.error("Fallo al cargar la sesión:", err);
         
-        // Cierre de sesión seguro sin cortocircuitos
+        // Si el cronómetro ganó, la red o Supabase se quedaron colgados (el limbo)
+        if (err.message === "TIEMPO_AGOTADO") {
+            console.warn("Supabase se atascó. Forzando reinicio de la caché...");
+            Swal.fire("Aviso", "La conexión tardó demasiado. Por favor, intenta ingresar de nuevo.", "warning");
+        } else {
+            Swal.fire("Error", "No se pudo cargar tu perfil.", "error");
+        }
+        
+        // Limpieza "nuclear" para destrabar el navegador por completo
+        window.sessionStorage.clear();
+        window.localStorage.clear();
         try { await supabase.auth.signOut(); } catch(e) {}
-        mostrarLogin();
+        
+        mostrarLogin(); // Te salva de la pantalla negra
     } finally {
-        ocultarCargando(); // Garantía absoluta de que el spinner se apaga
+        procesandoSesion = false; // Soltamos el candado
+        ocultarCargando(); // Garantía absoluta de apagar el spinner
     }
 });
 
