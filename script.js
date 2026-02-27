@@ -1,12 +1,25 @@
 // --- IMPORTACIÓN DE SUPABASE ---
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-// --- 1. CONFIGURACIÓN ÚNICA Y BLINDADA ---
+// --- 1. CONFIGURACIÓN ANTI-BLOQUEOS (EL ESCUDO PARA EDGE Y CHROME) ---
 const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
 
-// Solo una declaración del cliente, con los parámetros de compatibilidad total
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Nuestro escudo de memoria para evitar que la página se congele si el navegador bloquea
+const escudoMemoria = {
+    getItem: (key) => { try { return window.localStorage.getItem(key); } catch(e) { return null; } },
+    setItem: (key, value) => { try { window.localStorage.setItem(key, value); } catch(e) {} },
+    removeItem: (key) => { try { window.localStorage.removeItem(key); } catch(e) {} }
+};
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        storage: escudoMemoria,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
+});
 
 // Variables Globales
 let usuarioActual = null;
@@ -15,25 +28,30 @@ let chartInstance = null;
 let suscripcionTickets = null; 
 
 // ==========================================
-//  LÓGICA DE INTERFAZ (UI) - PANTALLA DE CARGA
+//  LÓGICA DE INTERFAZ (UI)
 // ==========================================
 
 function mostrarCargando() {
     const pantalla = document.getElementById('pantalla-carga');
-    pantalla.classList.remove('hidden');
-    pantalla.classList.add('flex');
+    if(pantalla) {
+        pantalla.classList.remove('hidden');
+        pantalla.classList.add('flex');
+    }
 }
 
 function ocultarCargando() {
     const pantalla = document.getElementById('pantalla-carga');
-    pantalla.classList.remove('flex');
-    pantalla.classList.add('hidden');
+    if(pantalla) {
+        pantalla.classList.remove('flex');
+        pantalla.classList.add('hidden');
+    }
 }
 
 function mostrarLogin() {
     document.getElementById('login-section').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('register-section').classList.add('hidden');
+    ocultarCargando(); // Aseguramos que el telón se quite
 }
 
 function mostrarDashboard() {
@@ -67,27 +85,33 @@ window.mostrarLogin = () => mostrarLogin();
 //  SISTEMA DE AUTENTICACIÓN
 // ==========================================
 
-// Listener de sesión
 supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("--> Evento de seguridad detectado:", event);
     
     if (session) {
-        console.log("--> Sesión activa. Buscando datos en la tabla usuarios...");
-        const { data: userData, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        mostrarCargando();
+        try {
+            console.log("--> Sesión activa. Buscando datos en la tabla usuarios...");
+            const { data: userData, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-        console.log("--> Datos encontrados:", userData, error);
+            if (error) throw error;
 
-        if (userData && !error) {
-            usuarioActual = userData;
-            mostrarDashboard();
-        } else {
-            console.error("Fallo al buscar el perfil:", error);
-            Swal.fire("Error", "No se encontró tu perfil en la base de datos", "error");
+            if (userData) {
+                usuarioActual = userData;
+                mostrarDashboard();
+            } else {
+                Swal.fire("Error", "No se encontró tu perfil en la base de datos", "error");
+                await supabase.auth.signOut();
+            }
+        } catch (err) {
+            console.error("Fallo al buscar el perfil:", err);
             await supabase.auth.signOut();
+        } finally {
+            ocultarCargando(); // Pase lo que pase, quitamos la pantalla de carga
         }
     } else {
         usuarioActual = null;
@@ -104,7 +128,7 @@ window.iniciarSesion = async () => {
     if(!email || !pass) return Swal.fire('Error', 'Ingresa correo y contraseña', 'warning');
 
     btn.disabled = true;
-    mostrarCargando(); // <-- Activamos pantalla de carga
+    mostrarCargando(); 
 
     try {
         console.log("2. Autenticando con Supabase...");
@@ -126,7 +150,7 @@ window.iniciarSesion = async () => {
         btn.disabled = false;
         Swal.fire('Error', 'Falla de conexión con el servidor', 'error');
     } finally {
-        ocultarCargando(); // <-- Apagamos pantalla de carga
+        ocultarCargando(); 
     }
 };
 
@@ -139,10 +163,9 @@ window.registrarUsuario = async () => {
 
     if (!email || !pass || !nombre) return Swal.fire('Campos vacíos', 'Completa todo el formulario', 'warning');
 
-    mostrarCargando(); // <-- Activamos pantalla de carga
+    mostrarCargando(); 
 
     try {
-        // 1. Crear usuario en Auth de Supabase
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: pass,
@@ -150,7 +173,6 @@ window.registrarUsuario = async () => {
 
         if (authError) throw authError;
 
-        // 2. Guardar perfil en la tabla 'usuarios'
         if(authData.user) {
              const { error: dbError } = await supabase
                 .from('usuarios')
@@ -171,8 +193,6 @@ window.registrarUsuario = async () => {
             mensajeEspanol = "La contraseña es muy débil. Debe tener al menos 8 caracteres e incluir letras (mayúsculas/minúsculas) y números.";
         } else if (error.message.includes("User already registered") || error.message.includes("already exists")) {
             mensajeEspanol = "Este correo electrónico ya se encuentra registrado en el sistema.";
-        } else if (error.message.includes("Email signups are disabled")) {
-            mensajeEspanol = "El registro por correo está temporalmente deshabilitado.";
         } else if (error.message.includes("Invalid email")) {
             mensajeEspanol = "El formato del correo electrónico no es válido.";
         } else {
@@ -181,12 +201,12 @@ window.registrarUsuario = async () => {
 
         Swal.fire({
             title: '¡Registro Exitoso!',
-            text: 'Tu cuenta ha sido creada. Por favor, revisa tu bandeja de entrada o carpeta de Spam para confirmar tu correo electrónico antes de iniciar sesión.',
+            text: 'Tu cuenta ha sido creada. Por favor, revisa tu bandeja de entrada para confirmar tu correo.',
             icon: 'success',
             confirmButtonColor: '#2563eb'
         });
     } finally {
-        ocultarCargando(); // <-- Apagamos pantalla de carga
+        ocultarCargando(); 
     }
 };
 
@@ -303,8 +323,8 @@ function actualizarTabla(tickets) {
                 <td class="p-3 text-right"><i class="fas fa-chevron-right text-gray-400"></i></td>
             </tr>
         `;
-    tbody.innerHTML += row;
-});
+        tbody.innerHTML += row;
+    });
 }
 
 window.crearPQR = async () => {
@@ -315,12 +335,12 @@ window.crearPQR = async () => {
 
     if (!desc) return Swal.fire('Atención', 'Describe tu caso', 'warning');
 
-    mostrarCargando(); // <-- Pantalla de carga activa
+    mostrarCargando(); 
 
     try {
         let fileUrl = null;
 
-        // 1. Subir archivo a Supabase Storage
+        // Subir archivo a Supabase Storage (¡COMPLETO Y SIN RECORTES!)
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             const fileName = `${Date.now()}_${file.name}`;
@@ -337,7 +357,6 @@ window.crearPQR = async () => {
             fileUrl = publicUrl;
         }
 
-        // 2. Guardar en tabla tickets
         const nuevoHistorial = [{
             autor: usuarioActual.nombre,
             rol: usuarioActual.rol,
@@ -369,7 +388,7 @@ window.crearPQR = async () => {
         console.error(e);
         Swal.fire('Error', 'No se pudo crear el caso', 'error');
     } finally {
-        ocultarCargando(); // <-- Apagar pantalla de carga
+        ocultarCargando(); 
     }
 };
 
@@ -448,7 +467,7 @@ window.enviarRespuesta = async () => {
 
     const nuevoEstado = document.getElementById('chat-nuevo-estado').value;
     
-    mostrarCargando(); // <-- Pantalla de carga activa
+    mostrarCargando(); 
     try {
         const { data: ticket, error: getError } = await supabase
             .from('tickets')
@@ -485,7 +504,7 @@ window.enviarRespuesta = async () => {
         console.error(e);
         Swal.fire('Error', 'No se pudo enviar el mensaje', 'error');
     } finally {
-        ocultarCargando(); // <-- Apagar pantalla de carga
+        ocultarCargando(); 
     }
 }
 
