@@ -184,8 +184,40 @@ async function inicializarApp() {
     }
 }
 
-// 4. ESCUDO DE RESPALDO (Solo para cierres de sesión desde otra pestaña)
-supabase.auth.onAuthStateChange((event) => {
+// 4. ESCUDO DE RESPALDO Y RECUPERACIÓN DE CLAVE
+supabase.auth.onAuthStateChange(async (event) => {
+    // Si el usuario viene desde el correo de recuperación
+    if (event === 'PASSWORD_RECOVERY') {
+        ocultarCargando();
+        const { value: nuevaClave } = await Swal.fire({
+            title: 'Nueva Contraseña',
+            input: 'password',
+            inputLabel: 'Escribe tu nueva contraseña',
+            inputPlaceholder: 'Mínimo 6 caracteres',
+            inputAttributes: { minlength: 6 },
+            allowOutsideClick: false,
+            confirmButtonText: 'Guardar Contraseña',
+            confirmButtonColor: '#2563eb'
+        });
+
+        if (nuevaClave) {
+            mostrarCargando();
+            const { error } = await supabase.auth.updateUser({ password: nuevaClave });
+            ocultarCargando();
+            
+            if (error) {
+                Swal.fire('Error', 'No se pudo actualizar: ' + error.message, 'error');
+            } else {
+                Swal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada.', 'success');
+            }
+        }
+        
+        // Cerramos la sesión temporal de recuperación y volvemos al login
+        await supabase.auth.signOut();
+        mostrarLogin();
+    }
+
+    // Cierre de sesión normal
     if (event === 'SIGNED_OUT') {
         usuarioActual = null;
         mostrarLogin();
