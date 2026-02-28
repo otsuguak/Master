@@ -26,7 +26,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
         storage: almacenamientoSeguro,
         autoRefreshToken: true,
         persistSession: true, 
-        detectSessionInUrl: false
+        detectSessionInUrl: true
     }
 });
 
@@ -305,7 +305,6 @@ window.recuperarClave = async () => {
     if (email) {
         mostrarCargando();
         
-        // ¡LA CLAVE ESTÁ AQUÍ! Forzamos la redirección a tu archivo exacto
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: 'https://otsuguak.github.io/Master/crm.html'
         });
@@ -313,7 +312,12 @@ window.recuperarClave = async () => {
         ocultarCargando();
         
         if (error) {
-            Swal.fire('Error', error.message, 'error');
+            // TRADUCCIÓN DEL ERROR ANTI-SPAM
+            if (error.message.includes("rate limit")) {
+                Swal.fire('Demasiados intentos', 'Por seguridad, hemos pausado los envíos a este correo. Espera alrededor de una hora para volver a intentarlo.', 'warning');
+            } else {
+                Swal.fire('Error', error.message, 'error');
+            }
         } else {
             Swal.fire('Enviado', 'Revisa tu correo para recuperar la contraseña', 'success');
         }
