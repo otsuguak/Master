@@ -167,8 +167,51 @@ window.cerrarSesion = async () => {
     }
 };
 
-// 3. AUTO-LOGIN (Cuando se recarga la página)
+// 3. AUTO-LOGIN Y RECUPERACIÓN (Interceptor definitivo)
 async function inicializarApp() {
+    
+    // --- 1. INTERCEPTOR MÁXIMO (Lee la URL directamente) ---
+    if (window.location.hash.includes('type=recovery')) {
+        ocultarCargando();
+        
+        const { value: nuevaClave } = await Swal.fire({
+            title: 'Nueva Contraseña',
+            input: 'password',
+            inputLabel: 'Escribe tu nueva contraseña',
+            inputPlaceholder: 'Mínimo 8 caracteres (letras y números)',
+            inputAttributes: { minlength: 8 },
+            allowOutsideClick: false,
+            confirmButtonText: 'Guardar Contraseña',
+            confirmButtonColor: '#2563eb'
+        });
+
+        if (nuevaClave) {
+            mostrarCargando();
+            // Como Supabase ya leyó la URL en el fondo, tiene permiso para actualizar
+            const { error } = await supabase.auth.updateUser({ password: nuevaClave });
+            ocultarCargando();
+            
+            if (error) {
+                let mensajeEspanol = "No se pudo actualizar la contraseña.";
+                if (error.message.includes("Password should be at least")) {
+                    mensajeEspanol = "La contraseña es muy débil. Debe tener letras y números.";
+                } else {
+                    mensajeEspanol = error.message;
+                }
+                Swal.fire('Error', mensajeEspanol, 'error');
+            } else {
+                Swal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada. Ya puedes ingresar.', 'success');
+            }
+        }
+        
+        // Limpiamos esa URL fea y larguísima de arriba y cerramos la sesión temporal
+        window.history.replaceState(null, null, window.location.pathname);
+        await supabase.auth.signOut();
+        mostrarLogin();
+        return; // ¡CLAVE! Detenemos el código aquí para que no siga con el login normal
+    }
+
+    // --- 2. FLUJO NORMAL DE INICIO (Si no hay recuperación en la URL) ---
     mostrarCargando();
     try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -184,50 +227,8 @@ async function inicializarApp() {
     }
 }
 
-// 4. ESCUDO DE RESPALDO Y RECUPERACIÓN DE CLAVE
-supabase.auth.onAuthStateChange(async (event) => {
-    
-    // --- 1. SI VIENE DEL CORREO DE RECUPERACIÓN ---
-    if (event === 'PASSWORD_RECOVERY') {
-        ocultarCargando();
-        
-        // TU CÓDIGO INTACTO (Perfectamente validado)
-        const { value: nuevaClave } = await Swal.fire({
-            title: 'Nueva Contraseña',
-            input: 'password',
-            inputLabel: 'Escribe tu nueva contraseña',
-            inputPlaceholder: 'Mínimo 8 caracteres',
-            inputAttributes: { minlength: 8 },
-            allowOutsideClick: false,
-            confirmButtonText: 'Guardar Contraseña',
-            confirmButtonColor: '#2563eb'
-        });
-
-        if (nuevaClave) {
-            mostrarCargando();
-            const { error } = await supabase.auth.updateUser({ password: nuevaClave });
-            ocultarCargando();
-            
-            if (error) {
-                let mensajeEspanol = "No se pudo actualizar la contraseña.";
-                // Reutilizamos tu lógica de validación del registro
-                if (error.message.includes("Password should be at least")) {
-                mensajeEspanol = "La contraseña es muy débil. Debe tener al menos 8 caracteres e incluir letras y números.";
-                } else {
-                    mensajeEspanol = error.message;
-                }
-                    Swal.fire('Error', mensajeEspanol, 'error');
-                    } else {
-                    Swal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada. Ya puedes ingresar.', 'success');
-                }
-        }
-        
-        // EL TOQUE FINAL: Destruimos la sesión temporal y lo mandamos al login limpio
-        await supabase.auth.signOut();
-        mostrarLogin();
-    }
-
-    // --- 2. SI EL USUARIO HACE CLIC EN "CERRAR SESIÓN" ---
+// 4. ESCUDO DE RESPALDO (Solo para cerrar sesión)
+supabase.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
         usuarioActual = null;
         mostrarLogin();
