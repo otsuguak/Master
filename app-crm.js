@@ -167,14 +167,14 @@ window.cerrarSesion = async () => {
     }
 };
 
-// 3. AUTO-LOGIN Y RECUPERACIÓN (Interceptor definitivo)
+// 3. AUTO-LOGIN Y RECUPERACIÓN (Interceptor Profesional)
 async function inicializarApp() {
     
-    // --- 1. INTERCEPTOR MÁXIMO (Lee la URL directamente) ---
+    // --- 1. INTERCEPTOR MÁXIMO ---
     if (window.location.hash.includes('type=recovery')) {
         ocultarCargando();
         
-        const { value: nuevaClave } = await Swal.fire({
+        await Swal.fire({
             title: 'Nueva Contraseña',
             input: 'password',
             inputLabel: 'Escribe tu nueva contraseña',
@@ -182,36 +182,40 @@ async function inicializarApp() {
             inputAttributes: { minlength: 8 },
             allowOutsideClick: false,
             confirmButtonText: 'Guardar Contraseña',
-            confirmButtonColor: '#2563eb'
-        });
-
-        if (nuevaClave) {
-            mostrarCargando();
-            // Como Supabase ya leyó la URL en el fondo, tiene permiso para actualizar
-            const { error } = await supabase.auth.updateUser({ password: nuevaClave });
-            ocultarCargando();
-            
-            if (error) {
-                let mensajeEspanol = "No se pudo actualizar la contraseña.";
-                if (error.message.includes("Password should be at least")) {
-                    mensajeEspanol = "La contraseña es muy débil. Debe tener letras y números.";
-                } else {
-                    mensajeEspanol = error.message;
+            confirmButtonColor: '#2563eb',
+            showLoaderOnConfirm: true,
+            // EL CADENERO: No deja cerrar la ventana hasta que Supabase diga que SÍ
+            preConfirm: async (nuevaClave) => {
+                const { error } = await supabase.auth.updateUser({ password: nuevaClave });
+                if (error) {
+                    let mensajeEspanol = "Error al actualizar la contraseña.";
+                    // Atrapamos cualquier variante del error en inglés de Supabase
+                    if (error.message.includes("Password") || error.message.toLowerCase().includes("weak") || error.message.includes("characters")) {
+                        mensajeEspanol = "Contraseña débil: Usa al menos 8 caracteres, combinando letras y números.";
+                    } else {
+                        mensajeEspanol = error.message;
+                    }
+                    // Muestra el error en rojo SIN cerrar la ventana
+                    Swal.showValidationMessage(mensajeEspanol);
+                    return false; 
                 }
-                Swal.fire('Error', mensajeEspanol, 'error');
-            } else {
-                Swal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada. Ya puedes ingresar.', 'success');
+                return true; // Si todo sale bien, la deja pasar
             }
-        }
+        }).then(async (result) => {
+            // Solo llegamos aquí si el cadenero (preConfirm) dio luz verde
+            if (result.isConfirmed) {
+                await Swal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada. Ya puedes ingresar.', 'success');
+                // Limpiamos la URL y cerramos la sesión temporal
+                window.history.replaceState(null, null, window.location.pathname);
+                await supabase.auth.signOut();
+                mostrarLogin();
+            }
+        });
         
-        // Limpiamos esa URL fea y larguísima de arriba y cerramos la sesión temporal
-        window.history.replaceState(null, null, window.location.pathname);
-        await supabase.auth.signOut();
-        mostrarLogin();
-        return; // ¡CLAVE! Detenemos el código aquí para que no siga con el login normal
+        return; // Detenemos la ejecución aquí
     }
 
-    // --- 2. FLUJO NORMAL DE INICIO (Si no hay recuperación en la URL) ---
+    // --- 2. FLUJO NORMAL DE INICIO ---
     mostrarCargando();
     try {
         const { data: { session } } = await supabase.auth.getSession();
