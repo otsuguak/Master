@@ -294,7 +294,12 @@ window.recuperarClave = async () => {
 
     if (email) {
         mostrarCargando();
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        
+        // ¡LA CLAVE ESTÁ AQUÍ! Forzamos la redirección a tu archivo exacto
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://otsuguak.github.io/Master/crm.html'
+        });
+        
         ocultarCargando();
         
         if (error) {
