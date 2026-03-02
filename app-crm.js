@@ -74,13 +74,17 @@ function mostrarDashboard() {
     if (usuarioActual.rol === 'agente') {
         document.getElementById('btn-nuevo-pqr').classList.add('hidden');
         document.getElementById('btn-exportar').classList.remove('hidden');
-        document.getElementById('chat-nuevo-estado').classList.remove('hidden');
-        document.getElementById('btn-config-index').classList.remove('hidden');
-        document.getElementById('btn-chat-admin').classList.remove('hidden');
+        
+        // Botones nuevos (el ? evita que el sistema colapse si aún no están en el HTML)
+        document.getElementById('btn-config-index')?.classList.remove('hidden');
+        document.getElementById('btn-chat-admin')?.classList.remove('hidden');
     } else {
         document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
         document.getElementById('btn-exportar').classList.add('hidden');
-        document.getElementById('chat-nuevo-estado').classList.add('hidden');
+        
+        // Ocultamos botones de admin para residentes
+        document.getElementById('btn-config-index')?.classList.add('hidden');
+        document.getElementById('btn-chat-admin')?.classList.add('hidden');
     }
 
     cargarDatosRealtime();
