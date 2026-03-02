@@ -75,6 +75,8 @@ function mostrarDashboard() {
         document.getElementById('btn-nuevo-pqr').classList.add('hidden');
         document.getElementById('btn-exportar').classList.remove('hidden');
         document.getElementById('chat-nuevo-estado').classList.remove('hidden');
+        document.getElementById('btn-config-index').classList.remove('hidden');
+        document.getElementById('btn-chat-admin').classList.remove('hidden');
     } else {
         document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
         document.getElementById('btn-exportar').classList.add('hidden');
@@ -252,7 +254,21 @@ window.registrarUsuario = async () => {
 
     if (!email || !pass || !nombre) return Swal.fire('Campos vacíos', 'Completa todo el formulario', 'warning');
 
-    mostrarCargando(); 
+    mostrarCargando();
+
+    // NUEVO: Validación estricta para el Administrador
+    if (rol === 'agente') {
+        const { data: adminData, error: adminErr } = await supabase
+            .from('usuarios')
+            .select('id')
+            .eq('rol', 'agente')
+            .limit(1);
+            
+        if (adminData && adminData.length > 0) {
+            ocultarCargando();
+            return Swal.fire('Acceso Denegado', 'Ya existe un administrador en el sistema. Solo se permite uno.', 'error');
+        }
+    }
 
     try {
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -521,78 +537,74 @@ function renderizarModalDetalle(data) {
     }
 }
 
-function renderizarChat(historial) {
-    const container = document.getElementById('chat-container');
-    container.innerHTML = '';
+// --- NUEVA LÓGICA DE RESOLUCIÓN Y ESCALAMIENTO ---
 
-    historial.forEach(msg => {
-        const esAdmin = msg.rol === 'agente';
-        const div = document.createElement('div');
-        div.className = `chat-bubble flex flex-col ${esAdmin ? 'chat-admin ml-0' : 'chat-user ml-auto'}`;
-        
-        if (esAdmin) div.classList.add('bg-blue-100', 'self-start');
-        else div.classList.add('bg-green-100', 'self-end');
-
-        const hora = new Date(msg.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-        div.innerHTML = `
-            <span class="font-bold text-xs mb-1 ${esAdmin ? 'text-blue-700' : 'text-green-700'}">
-                ${msg.autor} <span class="font-normal text-gray-400 text-[10px] ml-2">${hora}</span>
-            </span>
-            <p class="text-gray-800 leading-snug">${msg.mensaje}</p>
-        `;
-        container.appendChild(div);
-    });
+// Mostrar/Ocultar lista de usuarios si se elige "Escalado"
+window.evaluarEstadoEscalamiento = async () => {
+    const estado = document.getElementById('gestion-estado').value;
+    const divEscalar = document.getElementById('zona-escalar');
     
-    container.scrollTop = container.scrollHeight;
-}
+    if (estado === 'Escalado') {
+        divEscalar.classList.remove('hidden');
+        // Cargar lista de usuarios que NO son el usuario actual ni el residente que creó el PQR
+        const { data: usuarios, error } = await supabase
+            .from('usuarios')
+            .select('id, nombre, email, rol')
+            .neq('id', usuarioActual.id);
+            
+        const select = document.getElementById('gestion-asignado');
+        select.innerHTML = '<option value="">Seleccione a quién escalar...</option>';
+        if (usuarios) {
+            usuarios.forEach(u => {
+                select.innerHTML += `<option value="${u.id}">${u.nombre} (${u.rol}) - ${u.email}</option>`;
+            });
+        }
+    } else {
+        divEscalar.classList.add('hidden');
+    }
+};
 
-window.enviarRespuesta = async () => {
-    const txt = document.getElementById('chat-input').value;
-    if (!txt.trim()) return;
+window.guardarGestionPQR = async () => {
+    const estado = document.getElementById('gestion-estado').value;
+    const notas = document.getElementById('gestion-notas').value;
+    const asignadoA = document.getElementById('gestion-asignado').value;
 
-    const nuevoEstado = document.getElementById('chat-nuevo-estado').value;
-    
-    mostrarCargando(); 
+    if (estado === 'Escalado' && !asignadoA) {
+        return Swal.fire('Atención', 'Debes seleccionar a un usuario para escalar el caso.', 'warning');
+    }
+    if (!notas.trim()) {
+        return Swal.fire('Atención', 'Debes escribir una nota de resolución.', 'warning');
+    }
+
+    mostrarCargando();
     try {
-        const { data: ticket, error: getError } = await supabase
-            .from('tickets')
-            .select('historial')
-            .eq('id', pqrSeleccionadoID)
-            .single();
+        let updateData = {
+            estado: estado,
+            descripcion: document.getElementById('det-descripcion').innerText + '\n\n-- ACTUALIZACIÓN --\n' + notas
+        };
 
-        if(getError) throw getError;
-
-        let historial = ticket.historial || [];
-        
-        historial.push({
-            autor: usuarioActual.nombre,
-            rol: usuarioActual.rol,
-            mensaje: txt,
-            fecha: new Date().toISOString()
-        });
-
-        let updateData = { historial: historial };
-        if (usuarioActual.rol === 'agente') {
-            updateData.estado = nuevoEstado;
+        if (estado === 'Escalado') {
+            updateData.asignado_a = asignadoA;
         }
 
-        const { error: updateError } = await supabase
+        const { error } = await supabase
             .from('tickets')
             .update(updateData)
             .eq('id', pqrSeleccionadoID);
 
-        if(updateError) throw updateError;
+        if (error) throw error;
 
-        document.getElementById('chat-input').value = ""; 
-
+        Swal.fire('Gestión Guardada', 'El caso ha sido actualizado exitosamente.', 'success');
+        window.cerrarModal('modal-detalle');
+        
     } catch (e) {
         console.error(e);
-        Swal.fire('Error', 'No se pudo enviar el mensaje', 'error');
+        Swal.fire('Error', 'No se pudo actualizar el caso', 'error');
     } finally {
-        ocultarCargando(); 
+        ocultarCargando();
     }
-}
+};
+
 
 function actualizarKPIs(stats, total) {
     document.getElementById('kpi-total').innerText = total;

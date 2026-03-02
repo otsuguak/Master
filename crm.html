@@ -96,6 +96,14 @@
                 <button id="btn-exportar" onclick="exportarExcel()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-file-excel w-6 text-green-400"></i> Exportar Datos
                 </button>
+                
+                <button id="btn-config-index" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-cogs w-6 text-purple-400"></i> Parametrizar Inicio
+                </button>
+                <button id="btn-chat-admin" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
+                </button>
+
             </nav>
 
             <div class="p-4 border-t border-slate-800">
@@ -236,26 +244,38 @@
                 </div>
             </div>
 
-            <div id="chat-container" class="flex-1 p-4 overflow-y-auto bg-white flex flex-col space-y-3">
-            </div>
-
-            <div class="p-4 bg-gray-100 border-t shrink-0">
-                <div id="zona-respuesta">
-                    <div class="flex gap-2 mb-2">
-                         <select id="chat-nuevo-estado" class="p-2 text-sm border rounded hidden">
+            <div id="zona-gestion" class="p-6 bg-white flex-1 overflow-y-auto">
+                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2"><i class="fas fa-clipboard-check mr-2"></i>Gestión del Caso</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Cambiar Estado</label>
+                        <select id="gestion-estado" class="w-full p-2 border rounded mt-1 bg-gray-50 outline-none focus:border-blue-500" onchange="evaluarEstadoEscalamiento()">
                             <option value="En Proceso">En Proceso</option>
+                            <option value="Escalado">Escalar Caso</option>
                             <option value="Cerrado">Cerrar Caso</option>
                         </select>
                     </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="chat-input" class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escribe una respuesta...">
-                        <button onclick="enviarRespuesta()" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+
+                    <div id="zona-escalar" class="hidden bg-orange-50 p-3 rounded-lg border border-orange-200">
+                        <label class="text-xs font-bold text-orange-700 uppercase"><i class="fas fa-user-share mr-1"></i> Escalar a:</label>
+                        <select id="gestion-asignado" class="w-full p-2 border border-orange-300 rounded mt-1 bg-white">
+                            <option value="">Cargando usuarios...</option>
+                            </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Notas de Resolución / Respuesta</label>
+                        <textarea id="gestion-notas" rows="4" class="w-full p-3 border rounded mt-1 outline-none focus:border-blue-500" placeholder="Escribe el diagnóstico, respuesta o motivo de escalamiento..."></textarea>
                     </div>
                 </div>
-                <p id="zona-cerrada" class="hidden text-center text-red-500 font-bold py-2 bg-red-50 rounded">Este caso está cerrado.</p>
             </div>
+
+            <div class="p-4 bg-gray-100 border-t shrink-0 flex justify-end gap-3">
+                <button onclick="cerrarModal('modal-detalle')" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium">Cancelar</button>
+                <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold shadow-md">Guardar Gestión</button>
+            </div>
+            
         </div>
     </div>
 
