@@ -466,36 +466,6 @@ function actualizarTabla(tickets) {
     });
 }
 
-function actualizarTabla(tickets) {
-    const tbody = document.getElementById('tabla-body');
-    tbody.innerHTML = '';
-
-    if (tickets.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No hay casos registrados.</td></tr>';
-        return;
-    }
-
-    tickets.forEach(t => {
-        let badgeColor = 'bg-gray-100 text-gray-800';
-        if (t.estado === 'Abierto') badgeColor = 'bg-red-100 text-red-700 ring-1 ring-red-600/20';
-        if (t.estado === 'En Proceso') badgeColor = 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-600/20';
-        if (t.estado === 'Cerrado') badgeColor = 'bg-green-100 text-green-700 ring-1 ring-green-600/20';
-
-        const fecha = new Date(t.fecha).toLocaleDateString();
-
-        const row = `
-            <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
-                <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">#${t.id.slice(0, 8)}</td>
-                <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
-                <td class="p-3 text-gray-600">${fecha}</td>
-                <td class="p-3 font-medium">${t.nombre_usuario}</td>
-                <td class="p-3 text-gray-600"><span class="block text-xs font-bold text-blue-500">${t.categoria}</span>${t.tipo}</td>
-                <td class="p-3 text-right"><i class="fas fa-chevron-right text-gray-400"></i></td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-}
 
 window.crearPQR = async () => {
     const tipo = document.getElementById('pqr-tipo').value;
