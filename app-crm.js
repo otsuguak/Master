@@ -65,26 +65,31 @@ function mostrarLogin() {
 }
 
 function mostrarDashboard() {
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('register-section').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
+    // Funciones internas de seguridad para mostrar/ocultar sin romper el código
+    const ocultar = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
+    const mostrar = (id) => { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); };
 
-    document.getElementById('dash-nombre').innerText = usuarioActual.nombre;
-    document.getElementById('dash-rol').innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
+    ocultar('login-section');
+    ocultar('register-section');
+    mostrar('dashboard');
 
-    // 🌟 ESTE BOTÓN AHORA SE MUESTRA PARA TODOS
-    document.getElementById('btn-chat-linea')?.classList.remove('hidden');
+    const dashNombre = document.getElementById('dash-nombre');
+    if (dashNombre) dashNombre.innerText = usuarioActual.nombre;
+
+    const dashRol = document.getElementById('dash-rol');
+    if (dashRol) dashRol.innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
+
+    // Botón general de chat
+    mostrar('btn-chat-linea');
 
     if (usuarioActual.rol === 'agente') {
-        // Vista Administrador
-        document.getElementById('btn-nuevo-pqr').classList.add('hidden');
-        document.getElementById('btn-exportar').classList.remove('hidden');
-        document.getElementById('btn-config-index')?.classList.remove('hidden');
+        ocultar('btn-nuevo-pqr');
+        mostrar('btn-exportar');
+        mostrar('btn-config-index');
     } else {
-        // Vista Residente
-        document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
-        document.getElementById('btn-exportar').classList.add('hidden');
-        document.getElementById('btn-config-index')?.classList.add('hidden');
+        mostrar('btn-nuevo-pqr');
+        ocultar('btn-exportar');
+        ocultar('btn-config-index');
     }
 
     cargarDatosRealtime();
@@ -546,7 +551,10 @@ window.abrirDetalle = async (id) => {
 };
 
 function renderizarModalDetalle(data) {
-    document.getElementById('det-titulo').innerText = `Caso #${data.id.split('-')[0].toUpperCase()}`;
+    // 🪄 EL MISMO TRUCO DE MAGIA, AHORA EN EL MODAL
+    let numeroId = parseInt(data.id.slice(0, 8), 16).toString().slice(0, 8).padStart(8, '0');
+    document.getElementById('det-titulo').innerText = `CASO-${numeroId}`;
+    
     document.getElementById('det-estado').innerText = data.estado;
     document.getElementById('det-usuario').innerText = data.nombre_usuario;
     document.getElementById('det-categoria').innerText = data.categoria;
@@ -560,17 +568,27 @@ function renderizarModalDetalle(data) {
         link.classList.add('hidden');
     }
 
-    renderizarChat(data.historial || []);
+    // Buscamos las nuevas zonas de la interfaz de resolución
+    const panelGestion = document.getElementById('zona-gestion');
+    const pieModal = document.querySelector('#modal-detalle .border-t.shrink-0'); 
 
-    if (data.estado === 'Cerrado') {
-        document.getElementById('zona-respuesta').classList.add('hidden');
-        document.getElementById('zona-cerrada').classList.remove('hidden');
-    } else {
-        document.getElementById('zona-respuesta').classList.remove('hidden');
-        document.getElementById('zona-cerrada').classList.add('hidden');
-        if (usuarioActual.rol === 'agente') {
-            document.getElementById('chat-nuevo-estado').value = data.estado;
+    if (usuarioActual.rol === 'agente') {
+        // El administrador ve los controles para cambiar estado y escalar
+        const selectEstado = document.getElementById('gestion-estado');
+        if (selectEstado) {
+            selectEstado.value = data.estado === 'Abierto' ? 'En Proceso' : data.estado;
+            evaluarEstadoEscalamiento(); 
         }
+        
+        const notas = document.getElementById('gestion-notas');
+        if (notas) notas.value = ''; 
+
+        if (panelGestion) panelGestion.classList.remove('hidden');
+        if (pieModal) pieModal.classList.remove('hidden');
+    } else {
+        // El residente solo ve el detalle del caso, no puede auto-gestionarlo
+        if (panelGestion) panelGestion.classList.add('hidden');
+        if (pieModal) pieModal.classList.add('hidden');
     }
 }
 
