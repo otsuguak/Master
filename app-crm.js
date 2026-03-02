@@ -35,6 +35,7 @@ let usuarioActual = null;
 let pqrSeleccionadoID = null;
 let chartInstance = null;
 let suscripcionTickets = null; 
+let ticketsGlobales = [];
 
 // ==========================================
 //  LÓGICA DE INTERFAZ (UI)
@@ -71,20 +72,19 @@ function mostrarDashboard() {
     document.getElementById('dash-nombre').innerText = usuarioActual.nombre;
     document.getElementById('dash-rol').innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
 
+    // 🌟 ESTE BOTÓN AHORA SE MUESTRA PARA TODOS
+    document.getElementById('btn-chat-linea')?.classList.remove('hidden');
+
     if (usuarioActual.rol === 'agente') {
+        // Vista Administrador
         document.getElementById('btn-nuevo-pqr').classList.add('hidden');
         document.getElementById('btn-exportar').classList.remove('hidden');
-        
-        // Botones nuevos (el ? evita que el sistema colapse si aún no están en el HTML)
         document.getElementById('btn-config-index')?.classList.remove('hidden');
-        document.getElementById('btn-chat-admin')?.classList.remove('hidden');
     } else {
+        // Vista Residente
         document.getElementById('btn-nuevo-pqr').classList.remove('hidden');
         document.getElementById('btn-exportar').classList.add('hidden');
-        
-        // Ocultamos botones de admin para residentes
         document.getElementById('btn-config-index')?.classList.add('hidden');
-        document.getElementById('btn-chat-admin')?.classList.add('hidden');
     }
 
     cargarDatosRealtime();
@@ -391,16 +391,79 @@ async function cargarDatosRealtime() {
 }
 
 function procesarYRenderizarTickets(tickets) {
+    // Actualizamos nuestra memoria global para los filtros
+    ticketsGlobales = tickets; 
+
     let stats = { abiertos: 0, proceso: 0, cerrados: 0 };
     tickets.forEach(t => {
         if (t.estado === 'Abierto') stats.abiertos++;
-        else if (t.estado === 'En Proceso') stats.proceso++;
+        // Incluimos Escalado dentro de En Proceso para las métricas si lo deseas, 
+        // o puedes separar el KPI si luego quieres una gráfica de 4 partes
+        else if (t.estado === 'En Proceso' || t.estado === 'Escalado') stats.proceso++;
         else if (t.estado === 'Cerrado') stats.cerrados++;
     });
 
-    actualizarTabla(tickets);
     actualizarKPIs(stats, tickets.length);
     actualizarGrafica(stats);
+    
+    // En lugar de pintar todo de golpe, llamamos a aplicarFiltros para que respete si hay filtros activos
+    aplicarFiltros(); 
+}
+
+// NUEVA FUNCIÓN: Se ejecuta cada vez que mueves un filtro
+window.aplicarFiltros = () => {
+    const fEstado = document.getElementById('filtro-estado')?.value.toLowerCase() || '';
+    const fUsuario = document.getElementById('filtro-usuario')?.value.toLowerCase() || '';
+    const fTipo = document.getElementById('filtro-tipo')?.value.toLowerCase() || '';
+    const fCat = document.getElementById('filtro-categoria')?.value.toLowerCase() || '';
+
+    const filtrados = ticketsGlobales.filter(t => {
+        const coincideEstado = fEstado === '' || t.estado.toLowerCase() === fEstado;
+        const coincideUsuario = fUsuario === '' || t.nombre_usuario.toLowerCase().includes(fUsuario);
+        const coincideTipo = fTipo === '' || t.tipo.toLowerCase() === fTipo;
+        const coincideCat = fCat === '' || t.categoria.toLowerCase() === fCat;
+
+        return coincideEstado && coincideUsuario && coincideTipo && coincideCat;
+    });
+
+    actualizarTabla(filtrados);
+};
+
+function actualizarTabla(tickets) {
+    const tbody = document.getElementById('tabla-body');
+    tbody.innerHTML = '';
+
+    if (tickets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">No hay casos que coincidan.</td></tr>';
+        return;
+    }
+
+    tickets.forEach(t => {
+        let badgeColor = 'bg-gray-100 text-gray-800';
+        if (t.estado === 'Abierto') badgeColor = 'bg-red-100 text-red-700 ring-1 ring-red-600/20';
+        if (t.estado === 'En Proceso') badgeColor = 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-600/20';
+        if (t.estado === 'Escalado') badgeColor = 'bg-orange-100 text-orange-700 ring-1 ring-orange-600/20';
+        if (t.estado === 'Cerrado') badgeColor = 'bg-green-100 text-green-700 ring-1 ring-green-600/20';
+
+        const fecha = new Date(t.fecha).toLocaleDateString();
+
+        // TRUCO DE MAGIA: Convertimos el fragmento de UUID (letras y números) a un número real
+        // y le ponemos ceros a la izquierda para que luzca súper corporativo.
+        let numeroId = parseInt(t.id.slice(0, 8), 16).toString().slice(0, 8).padStart(8, '0');
+
+        const row = `
+            <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
+                <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">CASO-${numeroId}</td>
+                <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
+                <td class="p-3 text-gray-600">${fecha}</td>
+                <td class="p-3 font-medium text-gray-800">${t.nombre_usuario}</td>
+                <td class="p-3 font-semibold text-slate-600">${t.tipo}</td>
+                <td class="p-3 text-gray-600">${t.categoria}</td>
+                <td class="p-3 text-right"><i class="fas fa-chevron-right text-gray-400"></i></td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
 }
 
 function actualizarTabla(tickets) {

@@ -100,6 +100,9 @@
                 <button id="btn-config-index" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-cogs w-6 text-purple-400"></i> Parametrizar Inicio
                 </button>
+                <button id="btn-chat-linea" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
+                </button>
                 <button id="btn-chat-admin" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
                 </button>
@@ -155,7 +158,39 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 class="font-bold text-lg mb-4 text-gray-700">Casos Recientes</h3>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                        <h3 class="font-bold text-lg text-gray-700">Casos Recientes</h3>
+                    </div>
+
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <select id="filtro-estado" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
+                            <option value="">Todos los Estados</option>
+                            <option value="abierto">Abierto</option>
+                            <option value="en proceso">En Proceso</option>
+                            <option value="escalado">Escalado</option>
+                            <option value="cerrado">Cerrado</option>
+                        </select>
+                        
+                        <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar por usuario..." class="p-2 border rounded text-sm outline-none focus:border-blue-500">
+                        
+                        <select id="filtro-tipo" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
+                            <option value="">Todos los Tipos</option>
+                            <option value="petición">Petición</option>
+                            <option value="queja">Queja</option>
+                            <option value="reclamo">Reclamo</option>
+                            <option value="felicitación">Felicitación</option>
+                        </select>
+
+                        <select id="filtro-categoria" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
+                            <option value="">Todas las Categorías</option>
+                            <option value="seguridad">Seguridad</option>
+                            <option value="aseo">Aseo</option>
+                            <option value="convivencia">Convivencia</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="administración">Administración</option>
+                        </select>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead class="bg-gray-50 border-b">
@@ -164,7 +199,8 @@
                                     <th class="p-3 text-gray-500 font-semibold">Estado</th>
                                     <th class="p-3 text-gray-500 font-semibold">Fecha</th>
                                     <th class="p-3 text-gray-500 font-semibold">Usuario</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Asunto</th>
+                                    <th class="p-3 text-gray-500 font-semibold">Tipo</th>
+                                    <th class="p-3 text-gray-500 font-semibold">Categoría</th>
                                     <th class="p-3 text-gray-500 font-semibold"></th>
                                 </tr>
                             </thead>
