@@ -83,11 +83,14 @@ function mostrarDashboard() {
     mostrar('btn-directorio');
 
     if (usuarioActual.rol === 'agente') {
+        // Si es Admin: Mostramos todo lo de Admin
         document.getElementById('menu-admin-extra')?.classList.remove('hidden');
         ocultar('btn-nuevo-pqr');
         mostrar('btn-exportar');
         mostrar('btn-config-index');
     } else {
+        // Si es Residente: Escondemos rotundamente lo de Admin
+        document.getElementById('menu-admin-extra')?.classList.add('hidden'); // <-- ¡ESTA ES LA LÍNEA MÁGICA!
         mostrar('btn-nuevo-pqr');
         ocultar('btn-exportar');
         ocultar('btn-config-index');
