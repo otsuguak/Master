@@ -7,6 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Guardamos las noticias en memoria para poder abrirlas en el modal
 let noticiasGlobales = [];
+let inmueblesGlobales = []; // <-- ESTA ES LA QUE TE FALTABA
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Portal Comunitario iniciado. Conectando a Supabase...");

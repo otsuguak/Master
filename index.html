@@ -72,37 +72,24 @@
         <div class="flex justify-between items-end mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-white mb-2"><i class="fa-solid fa-house-flag text-green-500 mr-3"></i>Inmuebles Destacados</h2>
-                <p class="text-slate-400 text-sm">Propiedades disponibles recientemente.</p>
+                <p class="text-slate-400 text-sm">Propiedades seleccionadas por la administración.</p>
             </div>
             <button onclick="abrirModal('modal-inmuebles')" class="hidden md:block bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors border border-slate-600">
-                Ver Catálogo Completo (24)
+                Ver Catálogo Completo
             </button>
         </div>
                 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div class="glass-card rounded-2xl overflow-hidden group border-slate-700 hover:border-green-500">
-                <div class="h-40 bg-slate-700 relative overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    <span class="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">Se Arrienda</span>
-                </div>
-                <div class="p-4">
-                    <h4 class="font-bold text-lg">Torre 3 - Apto 402</h4>
-                    <p class="text-green-400 font-bold text-xl my-1">$1.800.000</p>
-                    <div class="flex gap-3 text-xs text-slate-400 mt-2">
-                        <span><i class="fa-solid fa-bed mr-1"></i> 3 Hab</span>
-                        <span><i class="fa-solid fa-bath mr-1"></i> 2 Baños</span>
-                    </div>
-                </div>
-            </div>
+        <div id="contenedor-inmuebles-destacados" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <p class="text-slate-400 col-span-full text-center py-4">Buscando inmuebles destacados...</p>
         </div>
         
         <button onclick="abrirModal('modal-inmuebles')" class="md:hidden w-full bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold py-3 px-4 rounded-lg transition-colors border border-slate-600">
-            Ver Catálogo Completo (24)
+            Ver Catálogo Completo
         </button>
     </section>
 
     <div id="modal-noticia" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        </div>
+    </div>
 
     <div id="modal-reserva" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="glass-card bg-slate-800/90 rounded-2xl w-full max-w-md border border-slate-600 shadow-2xl p-6">
@@ -138,22 +125,54 @@
         </div>
     </div>
 
-    <div id="modal-inmuebles" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col p-4 backdrop-blur-md">
-        <div class="container mx-auto max-w-5xl h-full flex flex-col">
+    <div id="modal-inmuebles" class="hidden fixed inset-0 bg-slate-900/95 z-50 flex flex-col p-4 backdrop-blur-md transition-opacity">
+        <div class="container mx-auto max-w-6xl h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pt-4 shrink-0">
                 <h2 class="text-3xl font-bold text-white"><i class="fa-solid fa-city text-green-500 mr-3"></i>Catálogo Inmobiliario</h2>
                 <button onclick="cerrarModal('modal-inmuebles')" class="bg-slate-800 hover:bg-red-500 text-white w-10 h-10 rounded-full transition-colors flex items-center justify-center border border-slate-600"><i class="fa-solid fa-times"></i></button>
             </div>
             
-            <div class="bg-slate-800/50 p-3 rounded-xl mb-6 flex gap-3 shrink-0 border border-slate-700">
-                <input type="text" placeholder="Buscar por torre, precio o tipo..." class="flex-1 bg-transparent border-none text-white text-sm outline-none px-2">
-                <button class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-bold transition-colors">Buscar</button>
+            <div class="bg-slate-800/80 p-3 rounded-xl mb-6 flex gap-3 shrink-0 border border-slate-700 shadow-lg">
+                <i class="fas fa-search text-slate-400 ml-3 mt-3"></i>
+                <input type="text" id="input-buscador-inm" placeholder="Buscar por torre, precio, tipo (venta/arriendo)..." class="flex-1 bg-transparent border-none text-white text-sm outline-none px-2 py-2">
             </div>
 
             <div class="flex-1 overflow-y-auto no-scrollbar pb-10">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center text-slate-400">
-                    Próximamente catálogo dinámico...
+                <div id="contenedor-catalogo-completo" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalle-inmueble" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glass-card bg-slate-800/95 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden border border-slate-600 shadow-2xl relative">
+            <button onclick="cerrarModal('modal-detalle-inmueble')" class="absolute top-4 right-4 bg-black/50 hover:bg-red-500 text-white w-10 h-10 rounded-full transition-colors flex items-center justify-center z-10"><i class="fa-solid fa-times"></i></button>
+            
+            <div class="md:w-1/2 bg-black relative flex items-center justify-center h-64 md:h-auto">
+                <img id="det-inm-foto-principal" src="" class="w-full h-full object-contain max-h-[60vh]">
+                <div id="det-inm-miniaturas" class="absolute bottom-4 flex gap-2 overflow-x-auto px-4 w-full justify-center no-scrollbar"></div>
+            </div>
+
+            <div class="md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto no-scrollbar">
+                <span id="det-inm-tipo" class="px-3 py-1 text-xs font-bold uppercase rounded block w-max mb-3"></span>
+                <h2 id="det-inm-titulo" class="text-3xl font-bold text-white mb-2"></h2>
+                <p id="det-inm-precio" class="text-2xl font-bold text-green-400 mb-6"></p>
+
+                <div class="grid grid-cols-4 gap-4 mb-6 border-y border-slate-700 py-4">
+                    <div class="text-center"><i class="fa-solid fa-bed text-slate-400 text-xl block mb-1"></i><span id="det-inm-hab" class="text-white font-bold"></span><p class="text-[10px] text-slate-500 uppercase">Hab.</p></div>
+                    <div class="text-center"><i class="fa-solid fa-bath text-slate-400 text-xl block mb-1"></i><span id="det-inm-banos" class="text-white font-bold"></span><p class="text-[10px] text-slate-500 uppercase">Baños</p></div>
+                    <div class="text-center"><i class="fa-solid fa-ruler-combined text-slate-400 text-xl block mb-1"></i><span id="det-inm-area" class="text-white font-bold"></span><p class="text-[10px] text-slate-500 uppercase">Mts²</p></div>
+                    <div class="text-center"><i class="fa-solid fa-car text-slate-400 text-xl block mb-1"></i><span id="det-inm-parq" class="text-white font-bold"></span><p class="text-[10px] text-slate-500 uppercase">Parq.</p></div>
                 </div>
+
+                <div class="flex-1 mb-6">
+                    <h4 class="text-slate-400 text-sm font-bold mb-2 uppercase">Descripción</h4>
+                    <p id="det-inm-desc" class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+
+                <a id="det-inm-whatsapp" href="#" target="_blank" class="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-green-900/50 flex items-center justify-center text-lg mt-auto">
+                    <i class="fa-brands fa-whatsapp text-2xl mr-3"></i> Contactar al Propietario
+                </a>
             </div>
         </div>
     </div>
