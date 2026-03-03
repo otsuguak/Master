@@ -1103,3 +1103,152 @@ window.borrarZonaComun = async (id) => {
         }
     }
 };
+
+// ==========================================
+//  MÓDULO 3: MERCADO INMOBILIARIO (ADMIN)
+// ==========================================
+
+window.abrirModalInmuebles = () => {
+    document.getElementById('modal-admin-inmuebles').classList.remove('hidden');
+    cargarInmueblesAdmin();
+};
+
+window.guardarInmueble = async () => {
+    const tipo = document.getElementById('inm-tipo').value;
+    const precio = document.getElementById('inm-precio').value;
+    const titulo = document.getElementById('inm-titulo').value.trim();
+    const hab = document.getElementById('inm-hab').value;
+    const banos = document.getElementById('inm-banos').value;
+    const area = document.getElementById('inm-area').value;
+    const parq = document.getElementById('inm-parq').value;
+    const desc = document.getElementById('inm-desc').value.trim();
+    const nombre = document.getElementById('inm-nombre').value.trim();
+    const tel = document.getElementById('inm-tel').value.trim();
+    const archivos = document.getElementById('inm-fotos').files;
+
+    if (!titulo || !precio || !tel || !desc) {
+        return Swal.fire('Faltan Datos', 'El título, precio, descripción y teléfono son obligatorios.', 'warning');
+    }
+    if (archivos.length === 0) {
+        return Swal.fire('Sin fotos', 'Debes subir al menos una foto del inmueble.', 'warning');
+    }
+    if (archivos.length > 6) {
+        return Swal.fire('Límite excedido', 'Solo puedes subir un máximo de 6 fotos por inmueble.', 'warning');
+    }
+
+    Swal.fire({ title: 'Subiendo Inmueble y Fotos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+        let urlsImagenes = [];
+
+        // MAGIA: Bucle para subir múltiples imágenes a Supabase Storage
+        for (let i = 0; i < archivos.length; i++) {
+            const file = archivos[i];
+            const fileName = `inmueble_${Date.now()}_${i}_${file.name}`;
+            
+            const { error: uploadError } = await supabase.storage.from('inmuebles').upload(fileName, file);
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage.from('inmuebles').getPublicUrl(fileName);
+            urlsImagenes.push(publicUrl);
+        }
+
+        // Insertar todos los datos en la tabla inmuebles
+        const { error: dbError } = await supabase.from('inmuebles').insert([{
+            tipo_oferta: tipo,
+            titulo: titulo,
+            precio: parseFloat(precio),
+            habitaciones: parseInt(hab) || 0,
+            banos: parseInt(banos) || 0,
+            area: parseFloat(area) || 0,
+            parqueadero: parseInt(parq) || 0,
+            descripcion: desc,
+            contacto_nombre: nombre,
+            contacto_tel: tel,
+            imagenes: urlsImagenes // Guardamos el Array de URLs
+        }]);
+
+        if (dbError) throw dbError;
+
+        Swal.fire('¡Publicado!', 'El inmueble ya está en el catálogo del conjunto.', 'success');
+        
+        // Limpiar formulario
+        document.getElementById('inm-titulo').value = '';
+        document.getElementById('inm-precio').value = '';
+        document.getElementById('inm-desc').value = '';
+        document.getElementById('inm-tel').value = '';
+        document.getElementById('inm-fotos').value = '';
+        
+        cargarInmueblesAdmin();
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Hubo un problema al subir el inmueble.', 'error');
+    }
+};
+
+async function cargarInmueblesAdmin() {
+    const tbody = document.getElementById('tabla-inmuebles-admin');
+    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando catálogo...</td></tr>';
+
+    const { data, error } = await supabase.from('inmuebles').select('*').order('id', { ascending: false });
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-red-500">Error al cargar datos.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">No hay inmuebles publicados.</td></tr>';
+        return;
+    }
+
+    data.forEach(inm => {
+        // Formato moneda colombiana
+        const precioFormat = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(inm.precio);
+        const colorTipo = inm.tipo_oferta === 'Se Arrienda' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+        
+        // Sacamos la primera foto del array para mostrarla en la tablita
+        const fotoPortada = (inm.imagenes && inm.imagenes.length > 0) ? inm.imagenes[0] : 'https://via.placeholder.com/50';
+
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 flex items-center gap-3">
+                    <img src="${fotoPortada}" class="w-12 h-12 rounded object-cover shadow-sm">
+                    <span class="font-bold text-gray-800">${inm.titulo}</span>
+                </td>
+                <td class="p-3">
+                    <span class="px-2 py-1 text-[10px] font-bold uppercase rounded ${colorTipo} block w-max mb-1">${inm.tipo_oferta}</span>
+                    <span class="font-semibold text-gray-700">${precioFormat}</span>
+                </td>
+                <td class="p-3 text-gray-600 text-sm">
+                    ${inm.contacto_nombre}<br>
+                    <a href="https://wa.me/57${inm.contacto_tel}" target="_blank" class="text-green-500 hover:underline"><i class="fab fa-whatsapp"></i> ${inm.contacto_tel}</a>
+                </td>
+                <td class="p-3 text-center">
+                    <button onclick="borrarInmueble('${inm.id}')" class="text-red-500 hover:text-red-700 p-2">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+window.borrarInmueble = async (id) => {
+    const result = await Swal.fire({ title: '¿Borrar inmueble?', text: "Desaparecerá del catálogo público.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, borrar' });
+    if (result.isConfirmed) {
+        mostrarCargando();
+        try {
+            const { error } = await supabase.from('inmuebles').delete().eq('id', id);
+            if (error) throw error;
+            cargarInmueblesAdmin();
+            Swal.fire('Borrado', 'El inmueble fue eliminado.', 'success');
+        } catch (e) {
+            Swal.fire('Error', 'No se pudo eliminar.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+};
