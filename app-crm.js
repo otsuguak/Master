@@ -38,6 +38,17 @@ let suscripcionTickets = null;
 let ticketsGlobales = [];
 
 // ==========================================
+//  ESCUDO DE SEGURIDAD (ANTI-XSS)
+// ==========================================
+const escaparHTML = (texto) => {
+    if (!texto) return '';
+    // Convierte etiquetas <script> en texto inofensivo
+    const div = document.createElement('div');
+    div.innerText = texto;
+    return div.innerHTML;
+};
+
+// ==========================================
 //  LÓGICA DE INTERFAZ (UI)
 // ==========================================
 
@@ -447,7 +458,7 @@ function actualizarTabla(tickets) {
         return;
     }
 
-    tickets.forEach(t => {
+tickets.forEach(t => {
         let badgeColor = 'bg-gray-100 text-gray-800';
         if (t.estado === 'Abierto') badgeColor = 'bg-red-100 text-red-700 ring-1 ring-red-600/20';
         if (t.estado === 'En Proceso') badgeColor = 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-600/20';
@@ -455,19 +466,21 @@ function actualizarTabla(tickets) {
         if (t.estado === 'Cerrado') badgeColor = 'bg-green-100 text-green-700 ring-1 ring-green-600/20';
 
         const fecha = new Date(t.fecha).toLocaleDateString();
-
-        // TRUCO DE MAGIA: Convertimos el fragmento de UUID (letras y números) a un número real
-        // y le ponemos ceros a la izquierda para que luzca súper corporativo.
         let numeroId = parseInt(t.id.slice(0, 8), 16).toString().slice(0, 8).padStart(8, '0');
+
+        // APLICANDO EL ESCUDO: Purificamos los textos ingresados por el usuario
+        const nombreSeguro = escaparHTML(t.nombre_usuario);
+        const tipoSeguro = escaparHTML(t.tipo);
+        const categoriaSegura = escaparHTML(t.categoria);
 
         const row = `
             <tr class="border-b hover:bg-slate-50 transition cursor-pointer" onclick="abrirDetalle('${t.id}')">
                 <td class="p-3 font-mono text-xs text-blue-600 font-bold uppercase">CASO-${numeroId}</td>
                 <td class="p-3"><span class="px-2 py-1 rounded-md text-xs font-bold ${badgeColor}">${t.estado}</span></td>
                 <td class="p-3 text-gray-600">${fecha}</td>
-                <td class="p-3 font-medium text-gray-800">${t.nombre_usuario}</td>
-                <td class="p-3 font-semibold text-slate-600">${t.tipo}</td>
-                <td class="p-3 text-gray-600">${t.categoria}</td>
+                <td class="p-3 font-medium text-gray-800">${nombreSeguro}</td>
+                <td class="p-3 font-semibold text-slate-600">${tipoSeguro}</td>
+                <td class="p-3 text-gray-600">${categoriaSegura}</td>
                 <td class="p-3 text-right"><i class="fas fa-chevron-right text-gray-400"></i></td>
             </tr>
         `;
@@ -488,7 +501,12 @@ window.crearPQR = async () => {
 
     try {
         let fileUrl = null;
-
+        const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp','application/pdf' ];
+        for (let i = 0; i < archivos.length; i++) {
+        if (!tiposPermitidos.includes(archivos[i].type)) {
+            return Swal.fire('Archivo Peligroso', 'Solo se permiten imágenes en formato JPG, PNG o WEBP. Por favor, revisa tus archivos.', 'error');
+        }
+    }
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             const fileName = `${Date.now()}_${file.name}`;
@@ -704,7 +722,60 @@ window.cerrarModal = (id) => {
 };
 
 window.exportarExcel = async () => {
-    Swal.fire('Información', 'Para habilitar exportación, integraremos SheetJS en la siguiente fase Master.', 'info');
+    // 1. Verificamos que tengamos datos para exportar
+    if (!ticketsGlobales || ticketsGlobales.length === 0) {
+        return Swal.fire('Sin datos', 'No hay casos registrados para exportar.', 'warning');
+    }
+
+    mostrarCargando();
+    
+    try {
+        // 2. Mapeamos y limpiamos los datos para que el Excel se vea profesional
+        const datosParaExcel = ticketsGlobales.map(t => {
+            let numeroId = parseInt(t.id.slice(0, 8), 16).toString().slice(0, 8).padStart(8, '0');
+            return {
+                'ID Caso': `CASO-${numeroId}`,
+                'Fecha Radicado': new Date(t.fecha).toLocaleDateString(),
+                'Estado': t.estado,
+                'Usuario': t.nombre_usuario,
+                'Tipo': t.tipo,
+                'Categoría': t.categoria,
+                'Descripción': t.descripcion,
+                'Link Evidencia': t.adjunto_url ? t.adjunto_url : 'Sin adjunto adjunto'
+            };
+        });
+
+        // 3. Magia de SheetJS: Convertimos el JSON a una hoja de cálculo
+        const hoja = XLSX.utils.json_to_sheet(datosParaExcel);
+        
+        // Ajustamos un poco el ancho de las columnas para que no se vea amontonado
+        hoja['!cols'] = [
+            { wch: 15 }, // ID
+            { wch: 15 }, // Fecha
+            { wch: 12 }, // Estado
+            { wch: 25 }, // Usuario
+            { wch: 15 }, // Tipo
+            { wch: 20 }, // Categoría
+            { wch: 50 }, // Descripción
+            { wch: 30 }  // Link
+        ];
+
+        // 4. Creamos el archivo (Libro) y le metemos la hoja
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, "Reporte_PQRs");
+
+        // 5. Descargamos el archivo automáticamente
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(libro, `Reporte_CRM_${fechaHoy}.xlsx`);
+
+        Swal.fire('¡Éxito!', 'El reporte de Excel ha sido descargado en tu equipo.', 'success');
+        
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Hubo un problema al generar el archivo Excel.', 'error');
+    } finally {
+        ocultarCargando();
+    }
 };
 
 // ==========================================
@@ -740,6 +811,13 @@ window.guardarNoticia = async () => {
     try {
         let imageUrl = null;
 
+        // NUEVO ESCUDO: Validar que realmente sean imágenes y no archivos ejecutables disfrazados
+         const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+        for (let i = 0; i < archivos.length; i++) {
+        if (!tiposPermitidos.includes(archivos[i].type)) {
+            return Swal.fire('Archivo Peligroso', 'Solo se permiten imágenes en formato JPG, PNG o WEBP. Por favor, revisa tus archivos.', 'error');
+            }
+        }
         // Subir imagen si se seleccionó una
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
@@ -1139,6 +1217,14 @@ window.guardarInmueble = async () => {
     }
     if (archivos.length > 6) {
         return Swal.fire('Límite excedido', 'Solo puedes subir un máximo de 6 fotos por inmueble.', 'warning');
+    }
+
+    // NUEVO ESCUDO: Validar que realmente sean imágenes y no archivos ejecutables disfrazados
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+    for (let i = 0; i < archivos.length; i++) {
+        if (!tiposPermitidos.includes(archivos[i].type)) {
+            return Swal.fire('Archivo Peligroso', 'Solo se permiten imágenes en formato JPG, PNG o WEBP. Por favor, revisa tus archivos.', 'error');
+        }
     }
 
     // NUEVO: Validar límite de 8 destacados
