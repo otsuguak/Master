@@ -942,3 +942,95 @@ window.gestionarReserva = async (id, nuevoEstado, email, zona) => {
         }
     }
 };
+
+// ==========================================
+//  PARAMETRIZACIÓN DE ZONAS COMUNES (ADMIN)
+// ==========================================
+
+window.abrirModalConfigZonas = () => {
+    document.getElementById('modal-admin-config-zonas').classList.remove('hidden');
+    cargarZonasConfigAdmin();
+};
+
+window.guardarZonaComun = async () => {
+    const nombre = document.getElementById('conf-zona-nombre').value.trim();
+    const aforo = document.getElementById('conf-zona-aforo').value.trim();
+    const icono = document.getElementById('conf-zona-icono').value;
+
+    if (!nombre) return Swal.fire('Atención', 'El nombre de la zona es obligatorio', 'warning');
+
+    mostrarCargando();
+    try {
+        const { error } = await supabase.from('zonas_comunes').insert([{ nombre, aforo, icono }]);
+        if (error) throw error;
+
+        Swal.fire('¡Éxito!', 'La zona ha sido creada y ya es visible en la página principal.', 'success');
+        
+        document.getElementById('conf-zona-nombre').value = '';
+        document.getElementById('conf-zona-aforo').value = '';
+        cargarZonasConfigAdmin();
+    } catch (e) {
+        Swal.fire('Error', 'No se pudo guardar la zona. Revisa tu conexión o Supabase.', 'error');
+    } finally {
+        ocultarCargando();
+    }
+};
+
+async function cargarZonasConfigAdmin() {
+    const tbody = document.getElementById('tabla-config-zonas');
+    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando zonas...</td></tr>';
+
+    const { data, error } = await supabase.from('zonas_comunes').select('*');
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-red-500">Error al cargar datos.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Aún no has creado zonas comunes.</td></tr>';
+        return;
+    }
+
+    data.forEach(zona => {
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 text-purple-600 text-lg"><i class="fa-solid ${zona.icono}"></i></td>
+                <td class="p-3 font-bold text-gray-800">${zona.nombre}</td>
+                <td class="p-3 text-gray-600">${zona.aforo || 'Sin límite definido'}</td>
+                <td class="p-3 text-center">
+                    <button onclick="borrarZonaComun('${zona.id}')" class="text-red-500 hover:text-red-700 p-2" title="Borrar Zona">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+window.borrarZonaComun = async (id) => {
+    const result = await Swal.fire({
+        title: '¿Borrar esta zona?',
+        text: "Desaparecerá de la página principal y los residentes no podrán reservarla.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, borrar'
+    });
+
+    if (result.isConfirmed) {
+        mostrarCargando();
+        try {
+            const { error } = await supabase.from('zonas_comunes').delete().eq('id', id);
+            if (error) throw error;
+            cargarZonasConfigAdmin();
+            Swal.fire('Borrada', 'La zona fue eliminada exitosamente.', 'success');
+        } catch (e) {
+            Swal.fire('Error', 'No se pudo borrar la zona.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+};
