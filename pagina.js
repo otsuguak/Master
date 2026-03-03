@@ -32,15 +32,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function cargarConfiguracionPortal() {
-    const { data } = await supabase.from('configuracion').select('*').eq('id', 1).single();
-    if (data) {
-        // Envolvemos la última palabra en el span de color gradient si es posible
-        const partesTitulo = data.titulo_hero.split(' ');
-        const ultimaPalabra = partesTitulo.pop();
-        const tituloFormat = `${partesTitulo.join(' ')} <span class="text-gradient">${ultimaPalabra}</span>`;
+    try {
+        const { data, error } = await supabase.from('configuracion').select('*').eq('id', 1).single();
         
-        document.getElementById('hero-titulo').innerHTML = tituloFormat || 'Tu Comunidad Inteligente';
-        document.getElementById('hero-desc').innerText = data.desc_hero || 'Bienvenido a tu portal.';
+        // Si hay data y el título no está vacío
+        if (data && data.titulo_hero) {
+            const titulo = data.titulo_hero;
+            const partesTitulo = titulo.split(' ');
+            const ultimaPalabra = partesTitulo.pop();
+            const tituloFormat = `${partesTitulo.join(' ')} <span class="text-gradient">${ultimaPalabra}</span>`;
+            
+            document.getElementById('hero-titulo').innerHTML = tituloFormat;
+            document.getElementById('hero-desc').innerText = data.desc_hero || '';
+        } else {
+            // Valores por defecto si la base de datos está vacía
+            document.getElementById('hero-titulo').innerHTML = `Tu Comunidad <span class="text-gradient">Inteligente</span>`;
+            document.getElementById('hero-desc').innerText = 'Noticias, reservas de zonas comunes y mercado inmobiliario.';
+        }
+    } catch (e) {
+        console.warn("Aún no hay configuración de portada guardada. Usando la de por defecto.");
+        document.getElementById('hero-titulo').innerHTML = `Tu Comunidad <span class="text-gradient">Inteligente</span>`;
+        document.getElementById('hero-desc').innerText = 'Noticias, reservas de zonas comunes y mercado inmobiliario.';
     }
 }
 

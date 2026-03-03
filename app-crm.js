@@ -1297,12 +1297,22 @@ window.abrirModalPortada = async () => {
 window.guardarPortada = async () => {
     const titulo = document.getElementById('conf-hero-titulo').value.trim();
     const desc = document.getElementById('conf-hero-desc').value.trim();
+    
+    if(!titulo) return Swal.fire('Atención', 'El título no puede estar vacío.', 'warning');
+
     mostrarCargando();
     try {
-        await supabase.from('configuracion').update({ titulo_hero: titulo, desc_hero: desc }).eq('id', 1);
+        // Usamos UPSERT para que la cree automáticamente si no existe la fila 1
+        const { error } = await supabase.from('configuracion').upsert({ id: 1, titulo_hero: titulo, desc_hero: desc });
+        
+        if (error) throw error;
+        
         Swal.fire('Guardado', 'La portada del portal ha sido actualizada.', 'success');
         cerrarModal('modal-admin-portada');
     } catch (e) {
-        Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
-    } finally { ocultarCargando(); }
+        console.error(e);
+        Swal.fire('Error', 'No se pudieron guardar los cambios en la base de datos.', 'error');
+    } finally { 
+        ocultarCargando(); 
+    }
 };
