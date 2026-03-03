@@ -115,8 +115,8 @@
                         <i class="fas fa-bullhorn w-6 text-blue-400"></i> Cartelera Digital
                     </button>
                     
-                    <button onclick="Swal.fire('Próximamente', 'Módulo en construcción', 'info')" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                        <i class="fas fa-tree-city w-6 text-purple-400"></i> Zonas Comunes
+                    <button onclick="abrirModalReservas()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-bullhorn w-6 text-blue-400"></i> Zonas Comunes
                     </button>
 
                     <button onclick="Swal.fire('Próximamente', 'Módulo en construcción', 'info')" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
@@ -404,6 +404,35 @@
                                 </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-reservas" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-tree-city mr-2"></i>Gestión de Reservas</h3>
+                <button onclick="cerrarModal('modal-admin-reservas')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <p class="text-sm text-gray-500 mb-4">Administra las solicitudes de zonas comunes. Al aprobar o rechazar, simulemos que se envía un correo al residente.</p>
+                
+                <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Fecha Solicitada</th>
+                                <th class="p-3 text-gray-500">Zona</th>
+                                <th class="p-3 text-gray-500">Apto / Email</th>
+                                <th class="p-3 text-gray-500">Estado</th>
+                                <th class="p-3 text-center text-gray-500">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-reservas-admin">
+                            </tbody>
+                    </table>
                 </div>
             </div>
         </div>

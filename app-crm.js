@@ -852,3 +852,93 @@ window.borrarNoticia = async (id) => {
         }
     }
 };
+
+// ==========================================
+//  MÓDULO 2: ZONAS COMUNES (ADMIN)
+// ==========================================
+
+window.abrirModalReservas = () => {
+    document.getElementById('modal-admin-reservas').classList.remove('hidden');
+    cargarReservasAdmin();
+};
+
+async function cargarReservasAdmin() {
+    const tbody = document.getElementById('tabla-reservas-admin');
+    tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center">Cargando reservas...</td></tr>';
+
+    const { data, error } = await supabase
+        .from('reservas')
+        .select('*')
+        .order('fecha', { ascending: false });
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-red-500">Error al cargar.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500">No hay reservas registradas.</td></tr>';
+        return;
+    }
+
+    data.forEach(res => {
+        let badgeColor = 'bg-yellow-100 text-yellow-700';
+        if(res.estado === 'Aprobada') badgeColor = 'bg-green-100 text-green-700';
+        if(res.estado === 'Rechazada') badgeColor = 'bg-red-100 text-red-700';
+
+        // Solo mostramos botones si está pendiente
+        let botonesAccion = '';
+        if (res.estado === 'Pendiente') {
+            botonesAccion = `
+                <button onclick="gestionarReserva('${res.id}', 'Aprobada', '${res.email}', '${res.zona}')" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-xs font-bold mr-2 transition">Aprobar</button>
+                <button onclick="gestionarReserva('${res.id}', 'Rechazada', '${res.email}', '${res.zona}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">Rechazar</button>
+            `;
+        } else {
+            botonesAccion = `<span class="text-gray-400 text-xs italic">Gestionada</span>`;
+        }
+
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 font-medium text-gray-800">${new Date(res.fecha).toLocaleDateString()}</td>
+                <td class="p-3 text-purple-600 font-bold">${res.zona}</td>
+                <td class="p-3 text-gray-600">${res.apto} <br> <span class="text-xs text-gray-400">${res.email}</span></td>
+                <td class="p-3"><span class="px-2 py-1 text-xs font-bold rounded ${badgeColor}">${res.estado}</span></td>
+                <td class="p-3 text-center">${botonesAccion}</td>
+            </tr>
+        `;
+    });
+}
+// opcion de reservas de zonas comunes 
+window.gestionarReserva = async (id, nuevoEstado, email, zona) => {
+    const confirmacion = await Swal.fire({
+        title: `¿${nuevoEstado} Reserva?`,
+        text: `Se cambiará el estado de la reserva de la ${zona}.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (confirmacion.isConfirmed) {
+        mostrarCargando();
+        try {
+            const { error } = await supabase.from('reservas').update({ estado: nuevoEstado }).eq('id', id);
+            if (error) throw error;
+            
+            cargarReservasAdmin();
+            
+            // Simulación visual de envío de correo
+            Swal.fire({
+                title: '¡Gestión Guardada!',
+                text: `Se ha simulado el envío de un correo a ${email} informando que su reserva fue ${nuevoEstado.toLowerCase()}.`,
+                icon: 'success'
+            });
+
+        } catch (e) {
+            Swal.fire('Error', 'No se pudo actualizar.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+};

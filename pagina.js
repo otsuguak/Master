@@ -120,3 +120,61 @@ window.abrirNoticiaDetalle = (index) => {
 // Funciones globales para abrir y cerrar ventanas
 window.abrirModal = (id) => document.getElementById(id).classList.remove('hidden');
 window.cerrarModal = (id) => document.getElementById(id).classList.add('hidden');
+
+// ==========================================
+//  MÓDULO 2: ZONAS COMUNES (RESIDENTE)
+// ==========================================
+
+window.enviarReserva = async () => {
+    const zona = document.getElementById('res-zona').value;
+    const fecha = document.getElementById('res-fecha').value;
+    const apto = document.getElementById('res-apto').value.trim();
+    const email = document.getElementById('res-email').value.trim();
+
+    if (!fecha || !apto || !email) {
+        return Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Por favor completa todos los campos.', background: '#1e293b', color: '#fff' });
+    }
+
+    // 1. Validar si la fecha ya pasó
+    const fechaElegida = new Date(fecha);
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    if (fechaElegida < hoy) {
+        return Swal.fire({ icon: 'error', title: 'Fecha inválida', text: 'No puedes reservar en el pasado.', background: '#1e293b', color: '#fff' });
+    }
+
+    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, background: '#1e293b', color: '#fff', didOpen: () => Swal.showLoading() });
+
+    try {
+        // 2. Revisar si ALGUIEN MÁS ya tiene aprobada esa zona en esa fecha
+        const { data: ocupado } = await supabase
+            .from('reservas')
+            .select('id')
+            .eq('zona', zona)
+            .eq('fecha', fecha)
+            .eq('estado', 'Aprobada');
+
+        if (ocupado && ocupado.length > 0) {
+            return Swal.fire({ icon: 'error', title: 'No Disponible', text: `La ${zona} ya está reservada para esa fecha. Elige otra.`, background: '#1e293b', color: '#fff' });
+        }
+
+        // 3. Enviar la solicitud a la base de datos
+        const { error } = await supabase.from('reservas').insert([{
+            zona: zona, fecha: fecha, apto: apto, email: email, estado: 'Pendiente'
+        }]);
+
+        if (error) throw error;
+
+        Swal.fire({ icon: 'success', title: 'Solicitud Enviada', text: 'El administrador revisará tu solicitud y te notificará.', background: '#1e293b', color: '#fff' });
+        
+        // Limpiar y cerrar
+        document.getElementById('res-fecha').value = '';
+        document.getElementById('res-apto').value = '';
+        document.getElementById('res-email').value = '';
+        cerrarModal('modal-reserva');
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Hubo un problema de conexión.', background: '#1e293b', color: '#fff' });
+    }
+};
