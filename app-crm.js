@@ -857,6 +857,10 @@ window.borrarNoticia = async (id) => {
 //  MÓDULO 2: ZONAS COMUNES (ADMIN)
 // ==========================================
 
+// ==========================================
+//  MÓDULO 2: ZONAS COMUNES (ADMIN)
+// ==========================================
+
 window.abrirModalReservas = () => {
     document.getElementById('modal-admin-reservas').classList.remove('hidden');
     cargarReservasAdmin();
@@ -887,16 +891,22 @@ async function cargarReservasAdmin() {
         if(res.estado === 'Aprobada') badgeColor = 'bg-green-100 text-green-700';
         if(res.estado === 'Rechazada') badgeColor = 'bg-red-100 text-red-700';
 
-        // Solo mostramos botones si está pendiente
         let botonesAccion = '';
         if (res.estado === 'Pendiente') {
             botonesAccion = `
-                <button onclick="gestionarReserva('${res.id}', 'Aprobada', '${res.email}', '${res.zona}')" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-xs font-bold mr-2 transition">Aprobar</button>
-                <button onclick="gestionarReserva('${res.id}', 'Rechazada', '${res.email}', '${res.zona}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">Rechazar</button>
+                <button onclick="gestionarReserva('${res.id}', 'Aprobada', '${res.email}', '${res.zona}')" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-xs font-bold mr-1 transition">Aprobar</button>
+                <button onclick="gestionarReserva('${res.id}', 'Rechazada', '${res.email}', '${res.zona}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold mr-2 transition">Rechazar</button>
             `;
         } else {
-            botonesAccion = `<span class="text-gray-400 text-xs italic">Gestionada</span>`;
+            botonesAccion = `<span class="text-gray-400 text-xs italic mr-3">Gestionada</span>`;
         }
+
+        // NUEVO: Botón de eliminar visible siempre
+        botonesAccion += `
+            <button onclick="borrarReserva('${res.id}')" class="text-red-500 hover:text-red-700 p-1" title="Eliminar del historial">
+                <i class="fas fa-trash text-sm"></i>
+            </button>
+        `;
 
         tbody.innerHTML += `
             <tr class="border-b hover:bg-gray-50">
@@ -904,39 +914,98 @@ async function cargarReservasAdmin() {
                 <td class="p-3 text-purple-600 font-bold">${res.zona}</td>
                 <td class="p-3 text-gray-600">${res.apto} <br> <span class="text-xs text-gray-400">${res.email}</span></td>
                 <td class="p-3"><span class="px-2 py-1 text-xs font-bold rounded ${badgeColor}">${res.estado}</span></td>
-                <td class="p-3 text-center">${botonesAccion}</td>
+                <td class="p-3 text-right">${botonesAccion}</td>
             </tr>
         `;
     });
 }
-// opcion de reservas de zonas comunes 
+
 window.gestionarReserva = async (id, nuevoEstado, email, zona) => {
-    const confirmacion = await Swal.fire({
-        title: `¿${nuevoEstado} Reserva?`,
-        text: `Se cambiará el estado de la reserva de la ${zona}.`,
-        icon: 'question',
+    let motivo = "";
+
+    // NUEVO: Si rechaza, le pedimos una justificación
+    if (nuevoEstado === 'Rechazada') {
+        const { value: text, isConfirmed } = await Swal.fire({
+            title: 'Rechazar Reserva',
+            input: 'text',
+            inputLabel: `¿Por qué rechazas la reserva de la ${zona}?`,
+            inputPlaceholder: 'Ej: Está en mantenimiento, aforo lleno...',
+            showCancelButton: true,
+            confirmButtonText: 'Rechazar y Notificar',
+            cancelButtonText: 'Cancelar'
+        });
+        
+        if (!isConfirmed) return; // Si cancela, no hacemos nada
+        motivo = text || "No cumple con las políticas o el horario ya no está disponible.";
+    } else {
+        const { isConfirmed } = await Swal.fire({
+            title: `¿Aprobar Reserva?`,
+            text: `Se aprobará la reserva de la ${zona} y se notificará al residente.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, Aprobar'
+        });
+        if (!isConfirmed) return;
+        motivo = "¡Tu reserva ha sido confirmada con éxito! Te esperamos.";
+    }
+
+    mostrarCargando();
+    try {
+        const { error } = await supabase.from('reservas').update({ estado: nuevoEstado }).eq('id', id);
+        if (error) throw error;
+        
+        // REEMPLAZAR CON TUS DATOS DE EMAILJS
+        const serviceID = 'service_yy0gcdm'; 
+        const templateID = 'template_0kwz3ij';
+        
+        const templateParams = {
+            to_email: email,             
+            zona_reservada: zona,        
+            estado_reserva: nuevoEstado, 
+            mensaje_adicional: motivo    // Enviamos el motivo al correo
+        };
+
+        // Si ya tienes tu cuenta de EmailJS configurada, descomenta esta línea:
+        // await emailjs.send(serviceID, templateID, templateParams);
+        
+        cargarReservasAdmin();
+        
+        Swal.fire({
+            title: '¡Gestión Completada!',
+            text: `El estado se guardó y se notificó a ${email} la decisión.`,
+            icon: 'success'
+        });
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Se guardó el estado, pero falló el envío del correo.', 'warning');
+    } finally {
+        ocultarCargando();
+    }
+};
+
+// NUEVA FUNCIÓN: Eliminar Reserva
+window.borrarReserva = async (id) => {
+    const result = await Swal.fire({
+        title: '¿Eliminar registro?',
+        text: "Esto borrará la reserva del historial de forma permanente.",
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, borrar'
     });
 
-    if (confirmacion.isConfirmed) {
+    if (result.isConfirmed) {
         mostrarCargando();
         try {
-            const { error } = await supabase.from('reservas').update({ estado: nuevoEstado }).eq('id', id);
+            const { error } = await supabase.from('reservas').delete().eq('id', id);
             if (error) throw error;
             
             cargarReservasAdmin();
-            
-            // Simulación visual de envío de correo
-            Swal.fire({
-                title: '¡Gestión Guardada!',
-                text: `Se ha simulado el envío de un correo a ${email} informando que su reserva fue ${nuevoEstado.toLowerCase()}.`,
-                icon: 'success'
-            });
-
+            Swal.fire('Eliminada', 'El registro fue borrado exitosamente.', 'success');
         } catch (e) {
-            Swal.fire('Error', 'No se pudo actualizar.', 'error');
+            Swal.fire('Error', 'No se pudo eliminar de la base de datos.', 'error');
         } finally {
             ocultarCargando();
         }
