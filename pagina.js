@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // DISPARAMOS LA BÚSQUEDA DE NOTICIAS
-    cargarNoticiasPublicas();
+    cargarNoticiasPublicas(); // carga noticias 
+    cargarZonasComunes(); // NUEVO: Llamamos a las zonas
 });
 
 // Función que va a Supabase, trae las 8 últimas y dibuja las tarjetas
@@ -177,4 +177,45 @@ window.enviarReserva = async () => {
         console.error(e);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Hubo un problema de conexión.', background: '#1e293b', color: '#fff' });
     }
+};
+
+// Función para traer Zonas Comunes desde Supabase
+async function cargarZonasComunes() {
+    const contenedor = document.getElementById('contenedor-zonas');
+    const selectZona = document.getElementById('res-zona');
+    if (!contenedor || !selectZona) return;
+
+    const { data, error } = await supabase.from('zonas_comunes').select('*');
+
+    if (error || !data || data.length === 0) {
+        contenedor.innerHTML = '<p class="text-slate-400 col-span-full text-center py-4">No hay zonas comunes configuradas aún.</p>';
+        selectZona.innerHTML = '<option value="">Sin zonas disponibles</option>';
+        return;
+    }
+
+    contenedor.innerHTML = '';
+    selectZona.innerHTML = '<option value="">Selecciona una zona...</option>';
+
+    data.forEach(zona => {
+        // 1. Dibujar la tarjeta en la pantalla principal
+        const tarjeta = `
+            <div onclick="abrirModalReservaConZona('${zona.nombre}')" class="glass-card rounded-2xl p-5 flex flex-col items-center text-center hover:bg-slate-800 transition-colors cursor-pointer border-slate-700 hover:border-purple-500">
+                <div class="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 text-blue-400 text-2xl">
+                    <i class="fa-solid ${zona.icono || 'fa-tree-city'}"></i>
+                </div>
+                <h4 class="font-bold text-white">${zona.nombre}</h4>
+                ${zona.aforo ? `<p class="text-xs text-slate-400 mt-2">Aforo: ${zona.aforo}</p>` : ''}
+            </div>
+        `;
+        contenedor.innerHTML += tarjeta;
+
+        // 2. Añadir la opción al desplegable del Modal
+        selectZona.innerHTML += `<option value="${zona.nombre}">${zona.nombre}</option>`;
+    });
+}
+
+// Pequeño truco para que si le das clic a "Piscina", el select ya aparezca en "Piscina"
+window.abrirModalReservaConZona = (nombreZona) => {
+    document.getElementById('res-zona').value = nombreZona;
+    abrirModal('modal-reserva');
 };

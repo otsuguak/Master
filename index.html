@@ -16,8 +16,6 @@
         .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
         .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
         .reveal.active { opacity: 1; transform: translateY(0); }
-        
-        /* Ocultar barra de scroll en modales pero permitir scroll */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -56,8 +54,7 @@
             <h2 class="text-3xl font-bold text-white mb-2"><i class="fa-solid fa-bullhorn text-blue-500 mr-3"></i>Cartelera Digital</h2>
             <p class="text-slate-400">Últimos avisos de la administración.</p>
         </div>
-
-       <div id="contenedor-noticias" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div id="contenedor-noticias" class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <p class="text-slate-400 col-span-full text-center animate-pulse py-8">Buscando noticias en el servidor...</p>
         </div>
     </section>
@@ -65,42 +62,10 @@
     <section class="container mx-auto px-6 py-12 reveal">
         <h2 class="text-3xl font-bold text-white mb-2"><i class="fa-solid fa-tree-city text-purple-500 mr-3"></i>Zonas Comunes</h2>
         <p class="text-slate-400 mb-8">Haz clic para solicitar tu reserva.</p>
-
-        <div id="modal-reserva" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="glass-card bg-slate-800/90 rounded-2xl w-full max-w-md border border-slate-600 shadow-2xl p-6">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
-                <h3 class="text-xl font-bold text-white"><i class="fa-regular fa-calendar-check text-purple-400 mr-2"></i>Solicitar Reserva</h3>
-                <button onclick="cerrarModal('modal-reserva')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-slate-400 font-bold mb-1 block">Zona a reservar</label>
-                    <select id="res-zona" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
-                        <option value="Piscina">Piscina</option>
-                        <option value="Zona BBQ">Zona BBQ</option>
-                        <option value="Salón Social">Salón Social</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold mb-1 block">Fecha</label>
-                        <input type="date" id="res-fecha" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none" style="color-scheme: dark;">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 font-bold mb-1 block">Apto / Casa</label>
-                        <input type="text" id="res-apto" placeholder="Ej: T2-401" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs text-slate-400 font-bold mb-1 block">Correo de contacto</label>
-                    <input type="email" id="res-email" placeholder="correo@ejemplo.com" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
-                </div>
-                <button onclick="enviarReserva()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-colors mt-4 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-                    Enviar Solicitud
-                </button>
-            </div>
+        
+        <div id="contenedor-zonas" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <p class="text-slate-400 col-span-full text-center py-4">Cargando zonas comunes...</p>
         </div>
-    </div>
     </section>
 
     <section class="container mx-auto px-6 py-12 mb-12 reveal">
@@ -137,22 +102,7 @@
     </section>
 
     <div id="modal-noticia" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="glass-card bg-slate-800/90 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-600 shadow-2xl">
-            <div class="h-48 bg-slate-700 relative shrink-0">
-                <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80" class="w-full h-full object-cover opacity-60">
-                <button onclick="cerrarModal('modal-noticia')" class="absolute top-4 right-4 bg-black/50 hover:bg-red-500 text-white w-8 h-8 rounded-full transition-colors flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto no-scrollbar">
-                <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded mb-3 inline-block">Urgente</span>
-                <h2 class="text-2xl font-bold text-white mb-2">Mantenimiento de Acueducto General</h2>
-                <p class="text-xs text-slate-400 mb-6"><i class="fa-regular fa-calendar mr-1"></i> Publicado: 12 Marzo 2026</p>
-                <div class="text-slate-300 space-y-4 text-sm leading-relaxed">
-                    <p>Estimados residentes, por solicitud de la empresa de Acueducto, nos vemos en la obligación de suspender el servicio el próximo martes desde las 8:00 AM.</p>
-                    <p>Recomendaciones: Almacenar agua suficiente para el uso sanitario y de cocina. Las zonas comunes estarán cerradas por sanidad durante este periodo.</p>
-                </div>
-            </div>
         </div>
-    </div>
 
     <div id="modal-reserva" class="hidden fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="glass-card bg-slate-800/90 rounded-2xl w-full max-w-md border border-slate-600 shadow-2xl p-6">
@@ -163,23 +113,25 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-xs text-slate-400 font-bold mb-1 block">Zona a reservar</label>
-                    <select class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
-                        <option>Piscina</option>
-                        <option>Zona BBQ</option>
-                        <option>Salón Social</option>
+                    <select id="res-zona" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
+                        <option value="">Cargando zonas...</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs text-slate-400 font-bold mb-1 block">Fecha</label>
-                        <input type="date" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none" style="color-scheme: dark;">
+                        <input type="date" id="res-fecha" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none" style="color-scheme: dark;">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400 font-bold mb-1 block">Apto / Casa</label>
-                        <input type="text" placeholder="Ej: T2-401" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
+                        <input type="text" id="res-apto" placeholder="Ej: T2-401" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
                     </div>
                 </div>
-                <button onclick="Swal.fire('Proximamente', 'Se conectará al CRM', 'info')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-colors mt-4">
+                <div>
+                    <label class="text-xs text-slate-400 font-bold mb-1 block">Correo de contacto</label>
+                    <input type="email" id="res-email" placeholder="correo@ejemplo.com" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:border-purple-500 outline-none">
+                </div>
+                <button onclick="enviarReserva()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-colors mt-4 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
                     Enviar Solicitud
                 </button>
             </div>
@@ -199,24 +151,13 @@
             </div>
 
             <div class="flex-1 overflow-y-auto no-scrollbar pb-10">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <div class="glass-card rounded-2xl overflow-hidden border-slate-700"><div class="h-32 bg-slate-700"></div><div class="p-4"><h4 class="font-bold">T3 - 402</h4><p class="text-green-400">$1.8M</p></div></div>
-                    <div class="glass-card rounded-2xl overflow-hidden border-slate-700"><div class="h-32 bg-slate-700"></div><div class="p-4"><h4 class="font-bold">T1 - 105</h4><p class="text-green-400">$2.1M</p></div></div>
-                    <div class="glass-card rounded-2xl overflow-hidden border-slate-700"><div class="h-32 bg-slate-700"></div><div class="p-4"><h4 class="font-bold">Casa 12</h4><p class="text-green-400">$450M</p></div></div>
-                    <div class="glass-card rounded-2xl overflow-hidden border-slate-700"><div class="h-32 bg-slate-700"></div><div class="p-4"><h4 class="font-bold">T5 - 903</h4><p class="text-green-400">$1.5M</p></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-center text-slate-400">
+                    Próximamente catálogo dinámico...
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function abrirModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-        }
-        function cerrarModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="pagina.js"></script>
 </body>
