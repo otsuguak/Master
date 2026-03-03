@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarNoticiasPublicas(); // carga noticias 
     cargarZonasComunes(); // NUEVO: Llamamos a las zonas
+    cargarInmueblesPublicos() //cargue de inmuebles 
 });
 
 // Función que va a Supabase, trae las 8 últimas y dibuja las tarjetas
@@ -218,4 +219,127 @@ async function cargarZonasComunes() {
 window.abrirModalReservaConZona = (nombreZona) => {
     document.getElementById('res-zona').value = nombreZona;
     abrirModal('modal-reserva');
+};
+
+// ==========================================
+//  MÓDULO 3: MERCADO INMOBILIARIO (PÚBLICO)
+// ==========================================
+
+async function cargarInmueblesPublicos() {
+    const { data, error } = await supabase.from('inmuebles').select('*').order('id', { ascending: false });
+    
+    if (error || !data) {
+        console.error(error);
+        return;
+    }
+
+    inmueblesGlobales = data;
+
+    // 1. Filtrar los Destacados para la pantalla principal (máximo 4)
+    const destacados = data.filter(inm => inm.destacado === true).slice(0, 4);
+    
+    // Si no hay destacados, mostramos los últimos 4 que se subieron
+    const paraMostrarEnInicio = destacados.length > 0 ? destacados : data.slice(0, 4);
+    renderizarTarjetasInmuebles(paraMostrarEnInicio, 'contenedor-inmuebles-destacados');
+
+    // 2. Llenar el catálogo completo
+    renderizarTarjetasInmuebles(data, 'contenedor-catalogo-completo');
+}
+
+// Función que dibuja las tarjetas donde se lo pidamos
+function renderizarTarjetasInmuebles(lista, contenedorId) {
+    const contenedor = document.getElementById(contenedorId);
+    if (!contenedor) return;
+
+    contenedor.innerHTML = '';
+    
+    if (lista.length === 0) {
+        contenedor.innerHTML = `<p class="text-slate-400 col-span-full text-center py-8">No hay propiedades disponibles por ahora.</p>`;
+        return;
+    }
+
+    lista.forEach(inm => {
+        const precioFormat = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(inm.precio);
+        const colorBg = inm.tipo_oferta === 'Se Arrienda' ? 'bg-blue-600' : 'bg-green-600';
+        const colorBorder = inm.tipo_oferta === 'Se Arrienda' ? 'hover:border-blue-500' : 'hover:border-green-500';
+        const foto = (inm.imagenes && inm.imagenes.length > 0) ? inm.imagenes[0] : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80';
+
+        // Convertimos el objeto completo a un string seguro para pasarlo por la función onclick
+        const tarjeta = `
+            <div onclick="abrirDetalleInmueble('${inm.id}')" class="glass-card rounded-2xl overflow-hidden group border-slate-700 ${colorBorder} cursor-pointer shadow-lg hover:shadow-xl transition-all">
+                <div class="h-44 bg-slate-700 relative overflow-hidden">
+                    <img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <span class="absolute top-3 right-3 ${colorBg} text-white text-[10px] font-extrabold uppercase px-3 py-1.5 rounded shadow-lg tracking-wider">${inm.tipo_oferta}</span>
+                    ${inm.destacado ? '<span class="absolute top-3 left-3 bg-yellow-500 text-white text-xs px-2 py-1 rounded shadow-lg"><i class="fas fa-star"></i></span>' : ''}
+                </div>
+                <div class="p-5">
+                    <h4 class="font-bold text-lg text-slate-100 truncate">${inm.titulo}</h4>
+                    <p class="text-green-400 font-extrabold text-xl my-2">${precioFormat}</p>
+                    <div class="flex gap-4 text-xs text-slate-400 mt-3 border-t border-slate-700/50 pt-3">
+                        <span title="Habitaciones"><i class="fa-solid fa-bed text-slate-500 mr-1"></i> ${inm.habitaciones}</span>
+                        <span title="Baños"><i class="fa-solid fa-bath text-slate-500 mr-1"></i> ${inm.banos}</span>
+                        <span title="Metros Cuadrados"><i class="fa-solid fa-ruler-combined text-slate-500 mr-1"></i> ${inm.area}m²</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        contenedor.innerHTML += tarjeta;
+    });
+}
+
+// 3. El Buscador en Tiempo Real
+document.getElementById('input-buscador-inm')?.addEventListener('input', (e) => {
+    const texto = e.target.value.toLowerCase();
+    const filtrados = inmueblesGlobales.filter(inm => 
+        inm.titulo.toLowerCase().includes(texto) || 
+        inm.tipo_oferta.toLowerCase().includes(texto) || 
+        inm.precio.toString().includes(texto)
+    );
+    renderizarTarjetasInmuebles(filtrados, 'contenedor-catalogo-completo');
+});
+
+// 4. Abrir la Super Ventana de Detalles con Carrusel
+window.abrirDetalleInmueble = (id) => {
+    const inm = inmueblesGlobales.find(i => i.id === id);
+    if (!inm) return;
+
+    // Llenar datos de texto
+    document.getElementById('det-inm-titulo').innerText = inm.titulo;
+    document.getElementById('det-inm-precio').innerText = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(inm.precio);
+    document.getElementById('det-inm-hab').innerText = inm.habitaciones;
+    document.getElementById('det-inm-banos').innerText = inm.banos;
+    document.getElementById('det-inm-area').innerText = inm.area;
+    document.getElementById('det-inm-parq').innerText = inm.parqueadero;
+    document.getElementById('det-inm-desc').innerText = inm.descripcion;
+    
+    // Configurar etiqueta (Venta o Arriendo)
+    const spanTipo = document.getElementById('det-inm-tipo');
+    spanTipo.innerText = inm.tipo_oferta;
+    spanTipo.className = `px-3 py-1 text-xs font-bold uppercase rounded block w-max mb-3 ${inm.tipo_oferta === 'Se Arrienda' ? 'bg-blue-600/20 text-blue-400' : 'bg-green-600/20 text-green-400'}`;
+
+    // Configurar WhatsApp
+    const mensajeWsp = encodeURIComponent(`Hola ${inm.contacto_nombre}, estoy interesado en el inmueble "${inm.titulo}" que vi publicado en la cartelera digital del conjunto.`);
+    document.getElementById('det-inm-whatsapp').href = `https://wa.me/57${inm.contacto_tel}?text=${mensajeWsp}`;
+
+    // Configurar Galería de Fotos
+    const imgPrincipal = document.getElementById('det-inm-foto-principal');
+    const miniaturasContenedor = document.getElementById('det-inm-miniaturas');
+    
+    // Foto por defecto si no hay
+    const fotos = (inm.imagenes && inm.imagenes.length > 0) ? inm.imagenes : ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80'];
+    
+    imgPrincipal.src = fotos[0];
+    miniaturasContenedor.innerHTML = '';
+
+    // Dibujar miniaturas solo si hay más de 1 foto
+    if (fotos.length > 1) {
+        fotos.forEach((url, index) => {
+            miniaturasContenedor.innerHTML += `
+                <img src="${url}" onclick="document.getElementById('det-inm-foto-principal').src='${url}'" 
+                     class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-white transition-all opacity-80 hover:opacity-100 shadow-xl bg-slate-800">
+            `;
+        });
+    }
+
+    abrirModal('modal-detalle-inmueble');
 };

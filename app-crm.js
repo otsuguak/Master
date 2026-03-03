@@ -1125,6 +1125,7 @@ window.guardarInmueble = async () => {
     const nombre = document.getElementById('inm-nombre').value.trim();
     const tel = document.getElementById('inm-tel').value.trim();
     const archivos = document.getElementById('inm-fotos').files;
+    const destacado = document.getElementById('inm-destacado').checked;
 
     if (!titulo || !precio || !tel || !desc) {
         return Swal.fire('Faltan Datos', 'El título, precio, descripción y teléfono son obligatorios.', 'warning');
@@ -1165,6 +1166,7 @@ window.guardarInmueble = async () => {
             descripcion: desc,
             contacto_nombre: nombre,
             contacto_tel: tel,
+            destacado: destacado,
             imagenes: urlsImagenes // Guardamos el Array de URLs
         }]);
 
@@ -1185,6 +1187,7 @@ window.guardarInmueble = async () => {
         console.error(e);
         Swal.fire('Error', 'Hubo un problema al subir el inmueble.', 'error');
     }
+    document.getElementById('inm-destacado').checked = false;
 };
 
 async function cargarInmueblesAdmin() {
@@ -1233,6 +1236,7 @@ async function cargarInmueblesAdmin() {
                 </td>
             </tr>
         `;
+
     });
 }
 
