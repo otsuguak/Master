@@ -1126,7 +1126,8 @@ window.guardarInmueble = async () => {
     const tel = document.getElementById('inm-tel').value.trim();
     const archivos = document.getElementById('inm-fotos').files;
     const destacado = document.getElementById('inm-destacado').checked;
-
+    
+    
     if (!titulo || !precio || !tel || !desc) {
         return Swal.fire('Faltan Datos', 'El título, precio, descripción y teléfono son obligatorios.', 'warning');
     }
@@ -1135,6 +1136,14 @@ window.guardarInmueble = async () => {
     }
     if (archivos.length > 6) {
         return Swal.fire('Límite excedido', 'Solo puedes subir un máximo de 6 fotos por inmueble.', 'warning');
+    }
+
+    // NUEVO: Validar límite de 8 destacados
+    if (destacado) {
+        const { count } = await supabase.from('inmuebles').select('*', { count: 'exact', head: true }).eq('destacado', true);
+        if (count >= 8) {
+            return Swal.fire('Límite Alcanzado', 'Solo puedes tener un máximo de 8 inmuebles destacados. Por favor, borra o edita uno existente.', 'warning');
+        }
     }
 
     Swal.fire({ title: 'Subiendo Inmueble y Fotos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -1241,18 +1250,59 @@ async function cargarInmueblesAdmin() {
 }
 
 window.borrarInmueble = async (id) => {
-    const result = await Swal.fire({ title: '¿Borrar inmueble?', text: "Desaparecerá del catálogo público.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, borrar' });
+    const result = await Swal.fire({ title: '¿Borrar inmueble?', text: "Se eliminará del catálogo y sus fotos se borrarán del servidor.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, borrar' });
+    
     if (result.isConfirmed) {
         mostrarCargando();
         try {
+            // 1. Traer las URLs de las fotos antes de borrar el registro
+            const { data: inm } = await supabase.from('inmuebles').select('imagenes').eq('id', id).single();
+            
+            // 2. Borrar el registro de la Base de Datos
             const { error } = await supabase.from('inmuebles').delete().eq('id', id);
             if (error) throw error;
+
+            // 3. Destruir las fotos del Storage para no acumular basura
+            if (inm && inm.imagenes && inm.imagenes.length > 0) {
+                // Extraemos solo el nombre final del archivo (ej: inmueble_123.jpg)
+                const rutasArchivos = inm.imagenes.map(url => url.split('/').pop());
+                await supabase.storage.from('inmuebles').remove(rutasArchivos);
+            }
+
             cargarInmueblesAdmin();
-            Swal.fire('Borrado', 'El inmueble fue eliminado.', 'success');
+            Swal.fire('Borrado', 'El inmueble y sus fotos fueron eliminados.', 'success');
         } catch (e) {
-            Swal.fire('Error', 'No se pudo eliminar.', 'error');
+            console.error(e);
+            Swal.fire('Error', 'No se pudo eliminar completamente.', 'error');
         } finally {
             ocultarCargando();
         }
     }
+};
+
+// ==========================================
+//  PORTADA Y BANNER (ADMIN)
+// ==========================================
+window.abrirModalPortada = async () => {
+    document.getElementById('modal-admin-portada').classList.remove('hidden');
+    mostrarCargando();
+    const { data } = await supabase.from('configuracion').select('*').eq('id', 1).single();
+    if (data) {
+        document.getElementById('conf-hero-titulo').value = data.titulo_hero || '';
+        document.getElementById('conf-hero-desc').value = data.desc_hero || '';
+    }
+    ocultarCargando();
+};
+
+window.guardarPortada = async () => {
+    const titulo = document.getElementById('conf-hero-titulo').value.trim();
+    const desc = document.getElementById('conf-hero-desc').value.trim();
+    mostrarCargando();
+    try {
+        await supabase.from('configuracion').update({ titulo_hero: titulo, desc_hero: desc }).eq('id', 1);
+        Swal.fire('Guardado', 'La portada del portal ha sido actualizada.', 'success');
+        cerrarModal('modal-admin-portada');
+    } catch (e) {
+        Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
+    } finally { ocultarCargando(); }
 };

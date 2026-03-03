@@ -25,10 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
+    cargarConfiguracionPortal(); // NUEVO LLAMADO
     cargarNoticiasPublicas(); // carga noticias 
     cargarZonasComunes(); // NUEVO: Llamamos a las zonas
     cargarInmueblesPublicos() //cargue de inmuebles 
 });
+
+async function cargarConfiguracionPortal() {
+    const { data } = await supabase.from('configuracion').select('*').eq('id', 1).single();
+    if (data) {
+        // Envolvemos la última palabra en el span de color gradient si es posible
+        const partesTitulo = data.titulo_hero.split(' ');
+        const ultimaPalabra = partesTitulo.pop();
+        const tituloFormat = `${partesTitulo.join(' ')} <span class="text-gradient">${ultimaPalabra}</span>`;
+        
+        document.getElementById('hero-titulo').innerHTML = tituloFormat || 'Tu Comunidad Inteligente';
+        document.getElementById('hero-desc').innerText = data.desc_hero || 'Bienvenido a tu portal.';
+    }
+}
 
 // Función que va a Supabase, trae las 8 últimas y dibuja las tarjetas
 async function cargarNoticiasPublicas() {
@@ -236,11 +250,11 @@ async function cargarInmueblesPublicos() {
 
     inmueblesGlobales = data;
 
-    // 1. Filtrar los Destacados para la pantalla principal (máximo 4)
-    const destacados = data.filter(inm => inm.destacado === true).slice(0, 4);
+    // 1. Filtrar los Destacados para la pantalla principal (máximo 8)
+    const destacados = data.filter(inm => inm.destacado === true).slice(0, 8);
     
-    // Si no hay destacados, mostramos los últimos 4 que se subieron
-    const paraMostrarEnInicio = destacados.length > 0 ? destacados : data.slice(0, 4);
+    // Si no hay destacados, mostramos los últimos 8 que se subieron
+    const paraMostrarEnInicio = destacados.length > 0 ? destacados : data.slice(0, 8);
     renderizarTarjetasInmuebles(paraMostrarEnInicio, 'contenedor-inmuebles-destacados');
 
     // 2. Llenar el catálogo completo
