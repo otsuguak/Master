@@ -57,22 +57,8 @@
             <p class="text-slate-400">Últimos avisos de la administración.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div onclick="abrirModal('modal-noticia')" class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform cursor-pointer relative overflow-hidden group border-slate-700 hover:border-blue-500">
-                <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-                <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded mb-3 inline-block">Urgente</span>
-                <h3 class="text-lg font-bold mb-2">Mantenimiento Acueducto</h3>
-                <p class="text-slate-400 text-sm mb-4 line-clamp-2">Corte de agua programado para el martes. Lee los detalles completos aquí...</p>
-                <span class="text-xs text-blue-400 font-bold group-hover:underline">Leer más <i class="fa-solid fa-arrow-right ml-1"></i></span>
-            </div>
-            
-            <div onclick="abrirModal('modal-noticia')" class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform cursor-pointer relative overflow-hidden group border-slate-700 hover:border-blue-500">
-                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded mb-3 inline-block">Informativo</span>
-                <h3 class="text-lg font-bold mb-2">Asamblea Ordinaria</h3>
-                <p class="text-slate-400 text-sm mb-4 line-clamp-2">Recordamos a todos los propietarios la asamblea anual en el salón...</p>
-                <span class="text-xs text-blue-400 font-bold group-hover:underline">Leer más <i class="fa-solid fa-arrow-right ml-1"></i></span>
-            </div>
+       <div id="contenedor-noticias" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <p class="text-slate-400 col-span-full text-center animate-pulse py-8">Buscando noticias en el servidor...</p>
         </div>
     </section>
 
@@ -207,6 +193,6 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="pagina.js"></script>
+    <script type="module" src="pagina.js"></script>
 </body>
 </html>
