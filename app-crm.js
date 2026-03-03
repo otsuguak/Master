@@ -83,6 +83,7 @@ function mostrarDashboard() {
     mostrar('btn-chat-linea');
 
     if (usuarioActual.rol === 'agente') {
+        document.getElementById('menu-admin-extra')?.classList.remove('hidden');
         ocultar('btn-nuevo-pqr');
         mostrar('btn-exportar');
         mostrar('btn-config-index');
@@ -708,3 +709,146 @@ window.exportarExcel = async () => {
 // ==========================================
 // Esta línea final verifica la sesión al abrir/recargar la página
 inicializarApp();
+
+// ==========================================
+//  MÓDULO 1: CARTELERA DIGITAL (ADMIN)
+// ==========================================
+
+window.abrirModalNoticias = () => {
+    document.getElementById('modal-admin-noticias').classList.remove('hidden');
+    // Ponemos la fecha de hoy por defecto
+    document.getElementById('noti-fecha').valueAsDate = new Date();
+    cargarNoticiasAdmin();
+};
+
+window.guardarNoticia = async () => {
+    const tipo = document.getElementById('noti-tipo').value;
+    const fecha = document.getElementById('noti-fecha').value;
+    const titulo = document.getElementById('noti-titulo').value.trim();
+    const resumen = document.getElementById('noti-resumen').value.trim();
+    const contenido = document.getElementById('noti-contenido').value.trim();
+    const fileInput = document.getElementById('noti-imagen');
+
+    if (!titulo || !resumen || !contenido || !fecha) {
+        return Swal.fire('Campos incompletos', 'Por favor llena todos los campos de texto y fecha.', 'warning');
+    }
+
+    mostrarCargando();
+    try {
+        let imageUrl = null;
+
+        // Subir imagen si se seleccionó una
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileName = `noticia_${Date.now()}_${file.name}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('noticias') // Asegúrate de haber creado este bucket
+                .upload(fileName, file);
+                
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('noticias')
+                .getPublicUrl(fileName);
+                
+            imageUrl = publicUrl;
+        }
+
+        // Insertar en la base de datos
+        const { error: dbError } = await supabase.from('noticias').insert([{
+            tipo: tipo,
+            fecha: fecha,
+            titulo: titulo,
+            resumen: resumen,
+            contenido: contenido,
+            imagen_url: imageUrl
+        }]);
+
+        if (dbError) throw dbError;
+
+        Swal.fire('¡Publicada!', 'La noticia ya está visible en la Cartelera Digital.', 'success');
+        
+        // Limpiar formulario
+        document.getElementById('noti-titulo').value = '';
+        document.getElementById('noti-resumen').value = '';
+        document.getElementById('noti-contenido').value = '';
+        document.getElementById('noti-imagen').value = '';
+        
+        // Recargar la tabla
+        cargarNoticiasAdmin();
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Hubo un problema al publicar la noticia.', 'error');
+    } finally {
+        ocultarCargando();
+    }
+};
+
+async function cargarNoticiasAdmin() {
+    const tbody = document.getElementById('tabla-noticias-admin');
+    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando...</td></tr>';
+
+    const { data, error } = await supabase
+        .from('noticias')
+        .select('id, titulo, tipo, fecha')
+        .order('fecha', { ascending: false });
+
+    if (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-red-500">Error al cargar</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">No hay noticias publicadas</td></tr>';
+        return;
+    }
+
+    data.forEach(noti => {
+        let colorType = 'bg-blue-100 text-blue-700';
+        if(noti.tipo === 'Urgente') colorType = 'bg-red-100 text-red-700';
+        if(noti.tipo === 'Alerta') colorType = 'bg-orange-100 text-orange-700';
+        if(noti.tipo === 'Exclusivo') colorType = 'bg-purple-100 text-purple-700';
+
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 text-gray-600">${noti.fecha}</td>
+                <td class="p-3 font-bold text-gray-800">${noti.titulo}</td>
+                <td class="p-3"><span class="px-2 py-1 text-xs font-bold rounded ${colorType}">${noti.tipo}</span></td>
+                <td class="p-3 text-center">
+                    <button onclick="borrarNoticia('${noti.id}')" class="text-red-500 hover:text-red-700 p-2" title="Borrar Noticia">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+window.borrarNoticia = async (id) => {
+    const result = await Swal.fire({
+        title: '¿Borrar Noticia?',
+        text: "Esta acción la quitará de la Cartelera Digital",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, borrar'
+    });
+
+    if (result.isConfirmed) {
+        mostrarCargando();
+        try {
+            const { error } = await supabase.from('noticias').delete().eq('id', id);
+            if (error) throw error;
+            cargarNoticiasAdmin();
+            Swal.fire('Borrada', 'La noticia fue eliminada.', 'success');
+        } catch (e) {
+            Swal.fire('Error', 'No se pudo borrar.', 'error');
+        } finally {
+            ocultarCargando();
+        }
+    }
+};

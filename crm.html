@@ -100,12 +100,29 @@
                 <button id="btn-config-index" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-cogs w-6 text-purple-400"></i> Parametrizar Inicio
                 </button>
+                
                 <button id="btn-chat-linea" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
                 </button>
                 <button id="btn-chat-admin" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
                     <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
                 </button>
+
+                <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
+                    <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Portal Web</div>
+                    
+                    <button onclick="abrirModalNoticias()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-bullhorn w-6 text-blue-400"></i> Cartelera Digital
+                    </button>
+                    
+                    <button onclick="Swal.fire('Próximamente', 'Módulo en construcción', 'info')" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-tree-city w-6 text-purple-400"></i> Zonas Comunes
+                    </button>
+
+                    <button onclick="Swal.fire('Próximamente', 'Módulo en construcción', 'info')" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-house-flag w-6 text-green-400"></i> Inmuebles
+                    </button>
+                </div>
 
             </nav>
 
@@ -319,7 +336,78 @@
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
         <h2 class="text-xl font-semibold text-white tracking-wider animate-pulse">Procesando...</h2>
     </div>
+    <div id="modal-admin-noticias" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i>Gestión de Cartelera Digital</h3>
+                <button onclick="cerrarModal('modal-admin-noticias')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-6 rounded-xl border shadow-sm mb-6">
+                    <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">Crear Nueva Publicación</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Tipo de Etiqueta</label>
+                            <select id="noti-tipo" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                <option value="Informativo" class="text-blue-600 font-bold">Informativo (Azul)</option>
+                                <option value="Urgente" class="text-red-600 font-bold">Urgente (Rojo)</option>
+                                <option value="Alerta" class="text-orange-500 font-bold">Alerta (Naranja)</option>
+                                <option value="Exclusivo" class="text-purple-600 font-bold">Exclusivo (Morado)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Fecha de Publicación</label>
+                            <input type="date" id="noti-fecha" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                        </div>
+                    </div>
 
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Título de la Noticia</label>
+                        <input type="text" id="noti-titulo" maxlength="80" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Mantenimiento de Acueducto">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Resumen (Para la tarjeta principal - Max 150 caracteres)</label>
+                        <textarea id="noti-resumen" rows="2" maxlength="150" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Breve descripción que enganche..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Contenido Completo (Max 3000 caracteres)</label>
+                        <textarea id="noti-contenido" rows="6" maxlength="3000" class="w-full p-2.5 border rounded-lg mt-1 outline-none overflow-y-auto" placeholder="Escribe aquí todo el detalle del comunicado..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Imagen de Portada (JPG/PNG)</label>
+                        <input type="file" id="noti-imagen" accept="image/*" class="w-full p-2 border rounded-lg mt-1 bg-gray-50">
+                    </div>
+
+                    <button onclick="guardarNoticia()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">
+                        <i class="fas fa-paper-plane mr-2"></i>Publicar Noticia
+                    </button>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list mr-2"></i>Noticias Publicadas</h4>
+                    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 border-b">
+                                <tr>
+                                    <th class="p-3 text-gray-500">Fecha</th>
+                                    <th class="p-3 text-gray-500">Título</th>
+                                    <th class="p-3 text-gray-500">Tipo</th>
+                                    <th class="p-3 text-center text-gray-500">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-noticias-admin">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script type="module" src="app-crm.js" defer></script>
 </body>
 </html>
