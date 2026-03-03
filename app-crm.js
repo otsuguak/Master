@@ -79,8 +79,8 @@ function mostrarDashboard() {
     const dashRol = document.getElementById('dash-rol');
     if (dashRol) dashRol.innerText = usuarioActual.rol === 'agente' ? 'Administrador' : 'Residente';
 
-    // Botón general de chat
-    mostrar('btn-chat-linea');
+    // Botón general de direcotrio
+    mostrar('btn-directorio');
 
     if (usuarioActual.rol === 'agente') {
         document.getElementById('menu-admin-extra')?.classList.remove('hidden');
@@ -1281,8 +1281,9 @@ window.borrarInmueble = async (id) => {
 };
 
 // ==========================================
-//  PORTADA Y BANNER (ADMIN)
+//  CONFIGURACIÓN GENERAL (PORTADA Y DIRECTORIO)
 // ==========================================
+
 window.abrirModalPortada = async () => {
     document.getElementById('modal-admin-portada').classList.remove('hidden');
     mostrarCargando();
@@ -1290,6 +1291,9 @@ window.abrirModalPortada = async () => {
     if (data) {
         document.getElementById('conf-hero-titulo').value = data.titulo_hero || '';
         document.getElementById('conf-hero-desc').value = data.desc_hero || '';
+        document.getElementById('conf-tel-admin').value = data.tel_admin || '';
+        document.getElementById('conf-tel-porteria').value = data.tel_porteria || '';
+        document.getElementById('conf-tel-policia').value = data.tel_policia || '';
     }
     ocultarCargando();
 };
@@ -1297,22 +1301,92 @@ window.abrirModalPortada = async () => {
 window.guardarPortada = async () => {
     const titulo = document.getElementById('conf-hero-titulo').value.trim();
     const desc = document.getElementById('conf-hero-desc').value.trim();
+    const telAdmin = document.getElementById('conf-tel-admin').value.trim();
+    const telPorteria = document.getElementById('conf-tel-porteria').value.trim();
+    const telPolicia = document.getElementById('conf-tel-policia').value.trim();
     
-    if(!titulo) return Swal.fire('Atención', 'El título no puede estar vacío.', 'warning');
+    if(!titulo) return Swal.fire('Atención', 'El título principal es obligatorio.', 'warning');
 
     mostrarCargando();
     try {
-        // Usamos UPSERT para que la cree automáticamente si no existe la fila 1
-        const { error } = await supabase.from('configuracion').upsert({ id: 1, titulo_hero: titulo, desc_hero: desc });
+        const { error } = await supabase.from('configuracion').upsert({ 
+            id: 1, 
+            titulo_hero: titulo, 
+            desc_hero: desc,
+            tel_admin: telAdmin,
+            tel_porteria: telPorteria,
+            tel_policia: telPolicia
+        });
         
         if (error) throw error;
         
-        Swal.fire('Guardado', 'La portada del portal ha sido actualizada.', 'success');
+        Swal.fire('Guardado', 'La configuración ha sido actualizada exitosamente.', 'success');
         cerrarModal('modal-admin-portada');
     } catch (e) {
         console.error(e);
         Swal.fire('Error', 'No se pudieron guardar los cambios en la base de datos.', 'error');
     } finally { 
         ocultarCargando(); 
+    }
+};
+
+// ==========================================
+//  DIRECTORIO Y SOPORTE (DINÁMICO)
+// ==========================================
+window.abrirDirectorio = async () => {
+    mostrarCargando();
+    try {
+        // Consultamos la configuración maestra
+        const { data, error } = await supabase.from('configuracion').select('*').eq('id', 1).single();
+        
+        // Si hay datos los usamos, sino ponemos unos genéricos de respaldo
+        const telAdmin = data?.tel_admin || "570000000000"; 
+        const telPorteria = data?.tel_porteria || "0000000";
+        const telPolicia = data?.tel_policia || "123";
+
+        ocultarCargando();
+
+        Swal.fire({
+            title: '<strong>Directorio del Conjunto</strong>',
+            html: `
+                <div class="space-y-4 mt-4 text-left">
+                    <a href="https://wa.me/${telAdmin}" target="_blank" class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition cursor-pointer text-gray-800 no-underline">
+                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white mr-4 shadow-md">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-green-800 m-0">Administración</h4>
+                            <p class="text-xs text-green-600 m-0">Lunes a Viernes (8am - 5pm)</p>
+                        </div>
+                    </a>
+
+                    <a href="tel:${telPorteria}" class="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition cursor-pointer text-gray-800 no-underline">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white mr-4 shadow-md">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-blue-800 m-0">Portería Principal</h4>
+                            <p class="text-xs text-blue-600 m-0">Atención 24/7</p>
+                        </div>
+                    </a>
+
+                    <a href="tel:${telPolicia}" class="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition cursor-pointer text-gray-800 no-underline">
+                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white mr-4 shadow-md">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-red-800 m-0">Cuadrante Policía</h4>
+                            <p class="text-xs text-red-600 m-0">Solo emergencias</p>
+                        </div>
+                    </a>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '400px'
+        });
+    } catch (e) {
+        ocultarCargando();
+        Swal.fire('Error', 'No se pudo cargar la información del directorio.', 'error');
     }
 };

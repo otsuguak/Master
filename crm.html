@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
         /* Animaciones suaves */
@@ -112,11 +112,8 @@
                     </div>
                 </div>
                 
-                <button id="btn-chat-linea" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
-                    <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
-                </button>
-                <button id="btn-chat-admin" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
-                    <i class="fas fa-comments w-6 text-yellow-400"></i> Chat en Línea
+                <button id="btn-directorio" onclick="abrirDirectorio()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-address-book w-6 text-yellow-400"></i> Directorio
                 </button>
 
             <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
@@ -603,31 +600,46 @@
         </div>
     </div>
 
-
     <div id="modal-admin-portada" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
-            <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg"><i class="fas fa-image mr-2"></i>Configurar Portada</h3>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in max-h-[90vh] flex flex-col">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Configuración General</h3>
                 <button onclick="cerrarModal('modal-admin-portada')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-6">
-                <p class="text-sm text-gray-500 mb-4">Actualiza el mensaje principal que ven los residentes al entrar al portal.</p>
-                
+            <div class="p-6 overflow-y-auto">
+                <h4 class="font-bold text-blue-600 mb-3 border-b pb-1"><i class="fas fa-image mr-1"></i> Textos del Portal</h4>
                 <div class="mb-4">
                     <label class="text-xs font-bold text-gray-500">Título Principal</label>
                     <input type="text" id="conf-hero-titulo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: Tu Comunidad Inteligente">
                 </div>
                 <div class="mb-6">
                     <label class="text-xs font-bold text-gray-500">Descripción / Subtítulo</label>
-                    <textarea id="conf-hero-desc" rows="3" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Noticias, reservas..."></textarea>
+                    <textarea id="conf-hero-desc" rows="2" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Noticias, reservas..."></textarea>
+                </div>
+
+                <h4 class="font-bold text-green-600 mb-3 border-b pb-1"><i class="fas fa-address-book mr-1"></i> Números del Directorio</h4>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500">WhatsApp Administración (Código país + Número)</label>
+                    <input type="number" id="conf-tel-admin" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 573001234567">
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tel. Portería</label>
+                        <input type="number" id="conf-tel-porteria" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 6015555555">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tel. Cuadrante (Policía)</label>
+                        <input type="number" id="conf-tel-policia" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 123 o Celular">
+                    </div>
                 </div>
 
                 <button onclick="guardarPortada()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">
-                    Guardar Cambios
+                    Guardar Configuración
                 </button>
             </div>
         </div>
     </div>
+    
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
