@@ -1528,6 +1528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
 // ==========================================
 //  MÓDULO 4: SALAS VIRTUALES (EXPRESS Y PREMIUM)
 // ==========================================
@@ -1535,10 +1536,19 @@ let linkJitsiGlobal = "";
 let tituloReunionGlobal = "";
 
 window.abrirModalJitsi = () => {
+    // ⚠️ CORRECCIÓN: Limpiamos los IDs correctos del nuevo formulario
+    const inputExpress = document.getElementById('jitsi-titulo-express');
+    const inputVip = document.getElementById('vip-motivo');
+    
+    if(inputExpress) inputExpress.value = '';
+    if(inputVip) inputVip.value = '';
+
+    // Reiniciamos la vista a las tarjetas de selección
     document.getElementById('jitsi-opciones').classList.remove('hidden');
     document.getElementById('jitsi-form-express').classList.add('hidden');
     document.getElementById('jitsi-form-premium').classList.add('hidden');
     document.getElementById('jitsi-step-share').classList.add('hidden');
+    
     document.getElementById('modal-admin-jitsi').classList.remove('hidden');
 };
 
@@ -1585,7 +1595,7 @@ window.solicitarSalaPremium = async () => {
 
     try {
         const serviceID = 'service_yy0gcdm'; 
-        const templateID = 'template_vuestra_id'; // 🔥 CAMBIA ESTO POR TU NUEVA ID DE TEMPLATE
+        const templateID = 'template_57qohkp'; // 🔥 CAMBIA ESTO POR TU NUEVA ID DE TEMPLATE
         
         const templateParams = {
             admin_email: usuarioActual.email,
