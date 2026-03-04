@@ -637,6 +637,51 @@
             </div>
         </div>
     </div>
+
+    <div id="modal-admin-jitsi" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in flex flex-col">
+            <div class="bg-indigo-700 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-user-secret mr-2"></i>Sala Virtual Privada</h3>
+                <button onclick="cerrarModal('modal-admin-jitsi')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 bg-indigo-50" id="jitsi-step-1">
+                <p class="text-xs text-indigo-800 mb-4 bg-indigo-100 p-3 rounded-lg border border-indigo-200">
+                    <i class="fas fa-lock mr-1"></i> Genera un enlace seguro. El sistema NO lo publicará. Tú decides a quién enviarlo.
+                </p>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Motivo / Nombre de la reunión</label>
+                    <input type="text" id="jitsi-titulo" class="w-full p-3 border border-indigo-200 rounded-lg mt-1 outline-none font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500" placeholder="Ej: Consejo de Administración">
+                </div>
+                <button onclick="generarSalaJitsi()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded-lg transition shadow-md">
+                    <i class="fas fa-link mr-2"></i>Generar Enlace Privado
+                </button>
+            </div>
+
+            <div class="p-4 md:p-6 bg-white hidden" id="jitsi-step-2">
+                <div class="text-center mb-4">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl mx-auto mb-2"><i class="fas fa-check"></i></div>
+                    <h4 class="font-bold text-gray-800">¡Sala Creada Exitosamente!</h4>
+                    <p class="text-xs text-gray-500">Comparte este enlace solo con los invitados.</p>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between mb-5">
+                    <span id="jitsi-link-text" class="text-xs font-mono text-blue-600 truncate mr-2 select-all"></span>
+                    <button onclick="copiarLinkJitsi()" class="text-gray-500 hover:text-blue-600 p-2 bg-white rounded shadow-sm border" title="Copiar"><i class="fas fa-copy"></i></button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <button onclick="compartirJitsiWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold p-2.5 rounded-lg transition flex items-center justify-center shadow-sm">
+                        <i class="fab fa-whatsapp text-lg mr-2"></i> WhatsApp
+                    </button>
+                    <button onclick="compartirJitsiCorreo()" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold p-2.5 rounded-lg transition flex items-center justify-center shadow-sm">
+                        <i class="fas fa-envelope text-lg mr-2"></i> Correo
+                    </button>
+                </div>
+                <button onclick="cerrarModal('modal-admin-jitsi')" class="w-full mt-2 text-gray-400 hover:text-gray-700 text-sm font-bold p-2 transition">Cerrar ventana</button>
+            </div>
+        </div>
+    </div>
     
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>

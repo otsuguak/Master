@@ -1527,3 +1527,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ==========================================
+//  MÓDULO 4: SALAS VIRTUALES (JITSI) - MODO PRIVADO
+// ==========================================
+let linkJitsiGlobal = "";
+let tituloReunionGlobal = "";
+
+window.abrirModalJitsi = () => {
+    document.getElementById('jitsi-titulo').value = '';
+    document.getElementById('jitsi-step-1').classList.remove('hidden');
+    document.getElementById('jitsi-step-2').classList.add('hidden');
+    document.getElementById('modal-admin-jitsi').classList.remove('hidden');
+};
+
+window.generarSalaJitsi = () => {
+    tituloReunionGlobal = document.getElementById('jitsi-titulo').value.trim();
+    if (!tituloReunionGlobal) return Swal.fire('Faltan Datos', 'Por favor ingresa el motivo de la reunión.', 'warning');
+
+    // Creamos el link aleatorio para que nadie lo pueda adivinar
+    const randomID = Math.random().toString(36).substring(2, 8);
+    const nombreLimpio = tituloReunionGlobal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '');
+    linkJitsiGlobal = `https://meet.jit.si/LumenGroup-${nombreLimpio}-${randomID}`;
+
+    // Mostramos el paso 2
+    document.getElementById('jitsi-link-text').innerText = linkJitsiGlobal;
+    document.getElementById('jitsi-step-1').classList.add('hidden');
+    document.getElementById('jitsi-step-2').classList.remove('hidden');
+};
+
+window.copiarLinkJitsi = () => {
+    navigator.clipboard.writeText(linkJitsiGlobal);
+    Swal.fire({ title: '¡Copiado!', text: 'El enlace está en tu portapapeles.', icon: 'success', timer: 1500, showConfirmButton: false });
+};
+
+window.compartirJitsiWhatsApp = () => {
+    const msj = encodeURIComponent(`Hola, te invito a la reunión virtual: *${tituloReunionGlobal}*.\n\nPara ingresar desde tu celular o computador, haz clic en este enlace seguro:\n👉 ${linkJitsiGlobal}\n\nLos espero.`);
+    window.open(`https://api.whatsapp.com/send?text=${msj}`, '_blank');
+};
+
+window.compartirJitsiCorreo = () => {
+    const asunto = encodeURIComponent(`Invitación a Reunión Virtual: ${tituloReunionGlobal}`);
+    const cuerpo = encodeURIComponent(`Estimado(a),\n\nLe extendemos la invitación para unirse a nuestra próxima reunión virtual: ${tituloReunionGlobal}.\n\nPara ingresar, haga clic en el siguiente enlace seguro a la hora acordada (no requiere instalar ninguna aplicación):\n\n${linkJitsiGlobal}\n\nAtentamente,\nLa Administración`);
+    // Esto abre mágicamente el correo (Outlook, Gmail, Apple Mail) con el texto pre-llenado
+    window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+};
