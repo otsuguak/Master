@@ -1528,33 +1528,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
 // ==========================================
-//  MÓDULO 4: SALAS VIRTUALES (EXPRESS Y PREMIUM)
+//  MÓDULO 4: SALAS VIRTUALES (ÚNICA VERSIÓN)
 // ==========================================
 let linkJitsiGlobal = "";
 let tituloReunionGlobal = "";
 
 window.abrirModalJitsi = () => {
-    // Limpiamos los campos solo si existen en el HTML actual
     const expressInput = document.getElementById('jitsi-titulo-express');
     const vipInput = document.getElementById('vip-motivo');
-    
     if (expressInput) expressInput.value = '';
     if (vipInput) vipInput.value = '';
 
-    // Reiniciamos la vista a las tarjetas de selección
-    const opciones = document.getElementById('jitsi-opciones');
-    const formExp = document.getElementById('jitsi-form-express');
-    const formVip = document.getElementById('jitsi-form-premium');
-    const stepShare = document.getElementById('jitsi-step-share');
-
-    if (opciones) opciones.classList.remove('hidden');
-    if (formExp) formExp.classList.add('hidden');
-    if (formVip) formVip.classList.add('hidden');
-    if (stepShare) stepShare.classList.add('hidden');
-    
-    document.getElementById('modal-admin-jitsi').classList.remove('hidden');
+    document.getElementById('jitsi-opciones')?.classList.remove('hidden');
+    document.getElementById('jitsi-form-express')?.classList.add('hidden');
+    document.getElementById('jitsi-form-premium')?.classList.add('hidden');
+    document.getElementById('jitsi-step-share')?.classList.add('hidden');
+    document.getElementById('modal-admin-jitsi')?.classList.remove('hidden');
 };
 
 window.mostrarOpcionExpress = () => {
@@ -1573,20 +1563,16 @@ window.volverOpcionesJitsi = () => {
     document.getElementById('jitsi-opciones').classList.remove('hidden');
 };
 
-// --- LOGICA EXPRESS (Jitsi Automático) ---
 window.generarSalaExpress = () => {
     tituloReunionGlobal = document.getElementById('jitsi-titulo-express').value.trim();
     if (!tituloReunionGlobal) return Swal.fire('Atención', 'Ingresa el motivo.', 'warning');
-
     const randomID = Math.random().toString(36).substring(2, 8);
     const nombreLimpio = tituloReunionGlobal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '');
     linkJitsiGlobal = `https://meet.jit.si/LumenGroup-${nombreLimpio}-${randomID}`;
-
     document.getElementById('jitsi-form-express').classList.add('hidden');
     document.getElementById('jitsi-step-share').classList.remove('hidden');
 };
 
-// --- LOGICA PREMIUM (Reserva vía EmailJS) ---
 window.solicitarSalaPremium = async () => {
     const motivo = document.getElementById('vip-motivo')?.value.trim();
     const fecha = document.getElementById('vip-fecha')?.value;
@@ -1599,9 +1585,8 @@ window.solicitarSalaPremium = async () => {
     if(btn) btn.disabled = true;
 
     try {
-        // 🔥 ¡JEFE! COPIE Y PEGUE ESTOS 2 DESDE SU PANEL DE EMAILJS AHORA MISMO:
-        const serviceID = 'service_yy0gcdm'; // <-- Asegúrese que sea este exacto
-        const templateID = 'template_57qohkp'; // <-- Verifique este en su panel
+        const serviceID = 'service_yy0gcdm'; 
+        const templateID = 'template_57qohkp'; 
         
         const templateParams = {
             admin_email: usuarioActual?.email || "Email no detectado",
@@ -1611,29 +1596,21 @@ window.solicitarSalaPremium = async () => {
             to_email: 'info@lumengroup.com.co'
         };
 
-        // El envío maestro
         const response = await emailjs.send(serviceID, templateID, templateParams);
         
         if(response.status === 200) {
             cerrarModal('modal-admin-jitsi');
-            Swal.fire({ 
-                title: '¡Solicitud Enviada!', 
-                text: 'Validaremos el calendario y te enviaremos la confirmación a tu correo.', 
-                icon: 'success' 
-            });
+            Swal.fire({ title: '¡Solicitud Enviada!', text: 'Validaremos el calendario y te enviaremos la confirmación al correo.', icon: 'success' });
         }
-
     } catch (e) {
-        console.error("Fallo detallado de EmailJS:", e);
-        // Si sale 400 es porque el Service ID o Template ID están mal escritos
-        Swal.fire('Error de Configuración', 'El servidor de correo no reconoce los IDs. Por favor verifique el Service ID en su código.', 'error');
+        console.error("Fallo EmailJS:", e);
+        Swal.fire('Error', 'No se pudo enviar la solicitud. Verifica los IDs en EmailJS.', 'error');
     } finally {
         ocultarCargando();
         if(btn) btn.disabled = false;
     }
 };
 
-// --- COMPARTIR ---
 window.compartirJitsiWhatsApp = () => {
     const msj = encodeURIComponent(`Hola, te invito a la reunión: *${tituloReunionGlobal}*.\n👉 Enlace: ${linkJitsiGlobal}`);
     window.open(`https://api.whatsapp.com/send?text=${msj}`, '_blank');
