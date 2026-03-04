@@ -286,17 +286,18 @@ window.registrarUsuario = async () => {
 
     mostrarCargando();
 
-    // NUEVO: Validación estricta para el Administrador
+   // NUEVO: Validación estricta usando el Teléfono Rojo (RPC) para evitar "Usuarios Fantasmas"
     if (rol === 'agente') {
-        const { data: adminData, error: adminErr } = await supabase
-            .from('usuarios')
-            .select('id')
-            .eq('rol', 'agente')
-            .limit(1);
-            
-        if (adminData && adminData.length > 0) {
+        const { data: adminExiste, error: rpcError } = await supabase.rpc('check_admin_exists');
+        
+        if (adminExiste) {
             ocultarCargando();
-            return Swal.fire('Acceso Denegado', 'Ya existe un administrador en el sistema. Solo se permite uno.', 'error');
+            return Swal.fire({
+                title: 'Acceso Denegado', 
+                text: 'Ya existe un administrador en el sistema. Por favor, selecciona el rol de Residente.', 
+                icon: 'warning',
+                confirmButtonColor: '#f59e0b'
+            });
         }
     }
 
