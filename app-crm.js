@@ -1604,7 +1604,7 @@ window.solicitarSalaPremium = async () => {
         const templateID = 'template_57qohkp'; // <-- Verifique este en su panel
         
         const templateParams = {
-            admin_email: usuarioActual.email,
+            admin_email: usuarioActual?.email || "Email no detectado",
             motivo_reunion: motivo,
             fecha_reunion: fecha,
             hora_reunion: hora,
