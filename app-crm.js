@@ -1588,9 +1588,9 @@ window.generarSalaExpress = () => {
 
 // --- LOGICA PREMIUM (Reserva vía EmailJS) ---
 window.solicitarSalaPremium = async () => {
-    const motivo = document.getElementById('vip-motivo').value.trim();
-    const fecha = document.getElementById('vip-fecha').value;
-    const hora = document.getElementById('vip-hora').value;
+    const motivo = document.getElementById('vip-motivo')?.value.trim();
+    const fecha = document.getElementById('vip-fecha')?.value;
+    const hora = document.getElementById('vip-hora')?.value;
 
     if (!motivo || !fecha || !hora) return Swal.fire('Atención', 'Completa los datos de la reserva.', 'warning');
 
@@ -1599,8 +1599,9 @@ window.solicitarSalaPremium = async () => {
     if(btn) btn.disabled = true;
 
     try {
-        const serviceID = 'service_yy0gcdm'; 
-        const templateID = 'template_57qohkp'; // 🔥 CAMBIA ESTO POR TU NUEVA ID DE TEMPLATE
+        // 🔥 ¡JEFE! COPIE Y PEGUE ESTOS 2 DESDE SU PANEL DE EMAILJS AHORA MISMO:
+        const serviceID = 'service_yy0gcdm'; // <-- Asegúrese que sea este exacto
+        const templateID = 'template_vuestra_id'; // <-- Verifique este en su panel
         
         const templateParams = {
             admin_email: usuarioActual.email,
@@ -1610,13 +1611,22 @@ window.solicitarSalaPremium = async () => {
             to_email: 'info@lumengroup.com.co'
         };
 
-        await emailjs.send(serviceID, templateID, templateParams);
-
-        cerrarModal('modal-admin-jitsi');
-        Swal.fire({ title: '¡Solicitud Enviada!', text: 'Validaremos el calendario y te enviaremos el link de grabación a tu correo.', icon: 'success' });
+        // El envío maestro
+        const response = await emailjs.send(serviceID, templateID, templateParams);
+        
+        if(response.status === 200) {
+            cerrarModal('modal-admin-jitsi');
+            Swal.fire({ 
+                title: '¡Solicitud Enviada!', 
+                text: 'Validaremos el calendario y te enviaremos la confirmación a tu correo.', 
+                icon: 'success' 
+            });
+        }
 
     } catch (e) {
-        Swal.fire('Error', 'No pudimos enviar el correo. Revisa EmailJS.', 'error');
+        console.error("Fallo detallado de EmailJS:", e);
+        // Si sale 400 es porque el Service ID o Template ID están mal escritos
+        Swal.fire('Error de Configuración', 'El servidor de correo no reconoce los IDs. Por favor verifique el Service ID en su código.', 'error');
     } finally {
         ocultarCargando();
         if(btn) btn.disabled = false;
