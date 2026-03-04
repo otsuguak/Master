@@ -1601,7 +1601,7 @@ window.solicitarSalaPremium = async () => {
     try {
         // 🔥 ¡JEFE! COPIE Y PEGUE ESTOS 2 DESDE SU PANEL DE EMAILJS AHORA MISMO:
         const serviceID = 'service_yy0gcdm'; // <-- Asegúrese que sea este exacto
-        const templateID = 'template_vuestra_id'; // <-- Verifique este en su panel
+        const templateID = 'template_57qohkp'; // <-- Verifique este en su panel
         
         const templateParams = {
             admin_email: usuarioActual.email,
