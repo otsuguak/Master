@@ -286,7 +286,7 @@ window.registrarUsuario = async () => {
 
     mostrarCargando();
 
-   // NUEVO: Validación estricta usando el Teléfono Rojo (RPC) para evitar "Usuarios Fantasmas"
+    // NUEVO: Validación estricta usando el Teléfono Rojo (RPC) para evitar "Usuarios Fantasmas"
     if (rol === 'agente') {
         const { data: adminExiste, error: rpcError } = await supabase.rpc('check_admin_exists');
         
@@ -318,10 +318,11 @@ window.registrarUsuario = async () => {
             if (dbError) throw dbError;
         }
 
+        // MOVIDO: La alerta de éxito solo se muestra si TODO salió bien (tanto auth como db)
         Swal.fire('¡Éxito!', 'Usuario creado. Revisa tu correo si pedimos confirmación (depende de configuración).', 'success');
         mostrarLogin();
 
-   } catch (error) {
+    } catch (error) {
         console.error("Error original de Supabase:", error);
         let mensajeEspanol = "Ocurrió un error inesperado al registrar el usuario.";
 
@@ -338,7 +339,7 @@ window.registrarUsuario = async () => {
             mensajeEspanol = error.message; 
         }
 
-        // AHORA SÍ: Mostramos la alerta roja de ERROR, no la verde de éxito
+        // CORREGIDO: Mostramos la alerta roja de ERROR, no la verde de éxito
         Swal.fire({
             title: 'Error de Registro',
             text: mensajeEspanol,
