@@ -665,9 +665,17 @@ window.guardarGestionPQR = async () => {
 
     mostrarCargando();
     try {
+        // MAGIA: Capturamos la fecha y hora exacta en formato de Colombia
+        const opcionesFecha = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        const fechaHora = new Date().toLocaleString('es-CO', opcionesFecha);
+        
+        // Armamos la firma profesional
+        const firmaSello = `\n\n--- 📝 GESTIÓN: ${usuarioActual.nombre} | ${fechaHora} ---\n`;
+
         let updateData = {
             estado: estado,
-            descripcion: document.getElementById('det-descripcion').innerText + '\n\n-- ACTUALIZACIÓN --\n' + notas
+            // Sumamos el historial viejo + nuestra firma nueva + la nota que escribió el usuario
+            descripcion: document.getElementById('det-descripcion').innerText + firmaSello + notas
         };
 
         if (estado === 'Escalado') {
@@ -683,8 +691,8 @@ window.guardarGestionPQR = async () => {
 
         Swal.fire('Gestión Guardada', 'El caso ha sido actualizado exitosamente.', 'success');
         window.cerrarModal('modal-detalle');
-
-        // ¡LA MAGIA AQUÍ! Obligamos a la tabla a recargarse solita sin usar F5
+        
+        // Recargamos la tabla en tiempo real
         cargarDatosRealtime();
         
     } catch (e) {
