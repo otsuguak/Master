@@ -1068,7 +1068,7 @@ window.gestionarReserva = async (id, nuevoEstado, email, zona) => {
         };
 
         // Si ya tienes tu cuenta de EmailJS configurada, descomenta esta línea:
-        // await emailjs.send(serviceID, templateID, templateParams);
+        await emailjs.send(serviceID, templateID, templateParams);
         
         cargarReservasAdmin();
         
