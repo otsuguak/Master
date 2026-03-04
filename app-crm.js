@@ -1529,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-//  MÓDULO 4: SALAS VIRTUALES (ÚNICA VERSIÓN)
+//  MÓDULO 4: SALAS VIRTUALES (VERSIÓN DEFINITIVA)
 // ==========================================
 let linkJitsiGlobal = "";
 let tituloReunionGlobal = "";
@@ -1548,19 +1548,19 @@ window.abrirModalJitsi = () => {
 };
 
 window.mostrarOpcionExpress = () => {
-    document.getElementById('jitsi-opciones').classList.add('hidden');
-    document.getElementById('jitsi-form-express').classList.remove('hidden');
+    document.getElementById('jitsi-opciones')?.classList.add('hidden');
+    document.getElementById('jitsi-form-express')?.classList.remove('hidden');
 };
 
 window.mostrarOpcionPremium = () => {
-    document.getElementById('jitsi-opciones').classList.add('hidden');
-    document.getElementById('jitsi-form-premium').classList.remove('hidden');
+    document.getElementById('jitsi-opciones')?.classList.add('hidden');
+    document.getElementById('jitsi-form-premium')?.classList.remove('hidden');
 };
 
 window.volverOpcionesJitsi = () => {
-    document.getElementById('jitsi-form-express').classList.add('hidden');
-    document.getElementById('jitsi-form-premium').classList.add('hidden');
-    document.getElementById('jitsi-opciones').classList.remove('hidden');
+    document.getElementById('jitsi-form-express')?.classList.add('hidden');
+    document.getElementById('jitsi-form-premium')?.classList.add('hidden');
+    document.getElementById('jitsi-opciones')?.classList.remove('hidden');
 };
 
 window.generarSalaExpress = () => {
@@ -1569,8 +1569,8 @@ window.generarSalaExpress = () => {
     const randomID = Math.random().toString(36).substring(2, 8);
     const nombreLimpio = tituloReunionGlobal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '');
     linkJitsiGlobal = `https://meet.jit.si/LumenGroup-${nombreLimpio}-${randomID}`;
-    document.getElementById('jitsi-form-express').classList.add('hidden');
-    document.getElementById('jitsi-step-share').classList.remove('hidden');
+    document.getElementById('jitsi-form-express')?.classList.add('hidden');
+    document.getElementById('jitsi-step-share')?.classList.remove('hidden');
 };
 
 window.solicitarSalaPremium = async () => {
@@ -1603,8 +1603,8 @@ window.solicitarSalaPremium = async () => {
             Swal.fire({ title: '¡Solicitud Enviada!', text: 'Validaremos el calendario y te enviaremos la confirmación al correo.', icon: 'success' });
         }
     } catch (e) {
-        console.error("Fallo EmailJS:", e);
-        Swal.fire('Error', 'No se pudo enviar la solicitud. Verifica los IDs en EmailJS.', 'error');
+        console.error("Fallo detallado de EmailJS:", e);
+        Swal.fire('Error', 'Sigue fallando. Revisa la consola.', 'error');
     } finally {
         ocultarCargando();
         if(btn) btn.disabled = false;
@@ -1620,124 +1620,4 @@ window.compartirJitsiCorreo = () => {
     const asunto = encodeURIComponent(`Reunión Virtual: ${tituloReunionGlobal}`);
     const cuerpo = encodeURIComponent(`Para entrar a la reunión haz clic aquí:\n\n${linkJitsiGlobal}`);
     window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
-};
-
-// --- LOGICA PREMIUM (Envía reserva a LumenGroup vía EmailJS) ---
-window.solicitarSalaPremium = async () => {
-    const motivo = document.getElementById('vip-motivo').value.trim();
-    const fecha = document.getElementById('vip-fecha').value;
-    const hora = document.getElementById('vip-hora').value;
-
-    if (!motivo || !fecha || !hora) return Swal.fire('Atención', 'Completa todos los datos de la reserva.', 'warning');
-
-    mostrarCargando();
-    const btn = document.querySelector("#jitsi-form-premium button");
-    if(btn) btn.disabled = true;
-
-    try {
-        // Usamos TU servicio que ya vi en el código
-        const serviceID = 'service_yy0gcdm'; 
-        
-        // 🔥 ¡AQUÍ PEGAS EL TEMPLATE ID QUE ACABAS DE CREAR! 🔥
-        const templateID = 'template_57qohkp'; 
-        
-        const templateParams = {
-            admin_email: usuarioActual.email, // Sacamos el correo del usuario logueado automáticamente
-            motivo_reunion: motivo,
-            fecha_reunion: fecha,
-            hora_reunion: hora,
-            to_email: 'info@lumengroup.com.co' // Correo de tu empresa
-        };
-
-        // Disparamos el correo
-        await emailjs.send(serviceID, templateID, templateParams);
-
-        cerrarModal('modal-admin-jitsi');
-        Swal.fire({
-            title: '¡Reserva Solicitada!',
-            text: 'Nuestro equipo validará la disponibilidad y te enviará el link corporativo al correo en breve.',
-            icon: 'success'
-        });
-
-    } catch (e) {
-        console.error("Error EmailJS:", e);
-        Swal.fire('Error', 'No pudimos enviar la solicitud. Intenta más tarde.', 'error');
-    } finally {
-        ocultarCargando();
-        if(btn) btn.disabled = false;
-    }
-};
-
-window.generarSalaJitsi = () => {
-    tituloReunionGlobal = document.getElementById('jitsi-titulo').value.trim();
-    if (!tituloReunionGlobal) return Swal.fire('Faltan Datos', 'Por favor ingresa el motivo de la reunión.', 'warning');
-
-    // Creamos el link aleatorio para que nadie lo pueda adivinar
-    const randomID = Math.random().toString(36).substring(2, 8);
-    const nombreLimpio = tituloReunionGlobal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '');
-    linkJitsiGlobal = `https://meet.jit.si/LumenGroup-${nombreLimpio}-${randomID}`;
-
-    // Mostramos el paso 2
-    document.getElementById('jitsi-link-text').innerText = linkJitsiGlobal;
-    document.getElementById('jitsi-step-1').classList.add('hidden');
-    document.getElementById('jitsi-step-2').classList.remove('hidden');
-};
-
-window.copiarLinkJitsi = () => {
-    navigator.clipboard.writeText(linkJitsiGlobal);
-    Swal.fire({ title: '¡Copiado!', text: 'El enlace está en tu portapapeles.', icon: 'success', timer: 1500, showConfirmButton: false });
-};
-
-window.compartirJitsiWhatsApp = () => {
-    const msj = encodeURIComponent(`Hola, te invito a la reunión virtual: *${tituloReunionGlobal}*.\n\nPara ingresar desde tu celular o computador, haz clic en este enlace seguro:\n👉 ${linkJitsiGlobal}\n\nLos espero.`);
-    window.open(`https://api.whatsapp.com/send?text=${msj}`, '_blank');
-};
-
-window.compartirJitsiCorreo = () => {
-    const asunto = encodeURIComponent(`Invitación a Reunión Virtual: ${tituloReunionGlobal}`);
-    const cuerpo = encodeURIComponent(`Estimado(a),\n\nLe extendemos la invitación para unirse a nuestra próxima reunión virtual: ${tituloReunionGlobal}.\n\nPara ingresar, haga clic en el siguiente enlace seguro a la hora acordada (no requiere instalar ninguna aplicación):\n\n${linkJitsiGlobal}\n\nAtentamente,\nLa Administración`);
-    // Esto abre mágicamente el correo (Outlook, Gmail, Apple Mail) con el texto pre-llenado
-    window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
-};
-
-// --- LOGICA PREMIUM (Envía el correo a info@lumengroup vía EmailJS) ---
-window.solicitarSalaPremium = async () => {
-    const motivo = document.getElementById('vip-motivo').value.trim();
-    const fecha = document.getElementById('vip-fecha').value;
-    const hora = document.getElementById('vip-hora').value;
-
-    if (!motivo || !fecha || !hora) return Swal.fire('Atención', 'Completa todos los datos de la reserva.', 'warning');
-
-    mostrarCargando();
-    const btn = document.querySelector("#jitsi-form-premium button");
-    btn.disabled = true;
-
-    try {
-        // Armamos el paquete de datos para EmailJS
-        const parametrosCorreo = {
-            admin_email: usuarioActual, // Correo del administrador
-            motivo: motivo,
-            fecha: fecha,
-            hora: hora,
-            to_email: 'info@lumengroup.com.co' // Tu correo de recepción
-        };
-
-        // Disparamos el correo (Reemplazarás estos IDs cuando configures tu cuenta)
-        await emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', parametrosCorreo);
-
-        cerrarModal('modal-admin-jitsi');
-        Swal.fire({
-            title: '¡Reserva Solicitada!',
-            text: 'Nuestro equipo de soporte validará la disponibilidad y te enviará el link corporativo y la confirmación a tu correo en breve.',
-            icon: 'success',
-            confirmButtonColor: '#3085d6'
-        });
-
-    } catch (e) {
-        console.error("Error EmailJS:", e);
-        Swal.fire('Error', 'No pudimos enviar la solicitud. Intenta más tarde.', 'error');
-    } finally {
-        ocultarCargando();
-        btn.disabled = false;
-    }
 };
