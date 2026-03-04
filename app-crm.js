@@ -1558,7 +1558,7 @@ window.volverOpcionesJitsi = () => {
     document.getElementById('jitsi-opciones').classList.remove('hidden');
 };
 
-// --- LOGICA EXPRESS (Automática, sin grabar) ---
+// --- LOGICA EXPRESS (Jitsi Automático) ---
 window.generarSalaExpress = () => {
     tituloReunionGlobal = document.getElementById('jitsi-titulo-express').value.trim();
     if (!tituloReunionGlobal) return Swal.fire('Atención', 'Ingresa el motivo.', 'warning');
@@ -1571,14 +1571,52 @@ window.generarSalaExpress = () => {
     document.getElementById('jitsi-step-share').classList.remove('hidden');
 };
 
+// --- LOGICA PREMIUM (Reserva vía EmailJS) ---
+window.solicitarSalaPremium = async () => {
+    const motivo = document.getElementById('vip-motivo').value.trim();
+    const fecha = document.getElementById('vip-fecha').value;
+    const hora = document.getElementById('vip-hora').value;
+
+    if (!motivo || !fecha || !hora) return Swal.fire('Atención', 'Completa los datos de la reserva.', 'warning');
+
+    mostrarCargando();
+    const btn = document.querySelector("#jitsi-form-premium button");
+    if(btn) btn.disabled = true;
+
+    try {
+        const serviceID = 'service_yy0gcdm'; 
+        const templateID = 'template_vuestra_id'; // 🔥 CAMBIA ESTO POR TU NUEVA ID DE TEMPLATE
+        
+        const templateParams = {
+            admin_email: usuarioActual.email,
+            motivo_reunion: motivo,
+            fecha_reunion: fecha,
+            hora_reunion: hora,
+            to_email: 'info@lumengroup.com.co'
+        };
+
+        await emailjs.send(serviceID, templateID, templateParams);
+
+        cerrarModal('modal-admin-jitsi');
+        Swal.fire({ title: '¡Solicitud Enviada!', text: 'Validaremos el calendario y te enviaremos el link de grabación a tu correo.', icon: 'success' });
+
+    } catch (e) {
+        Swal.fire('Error', 'No pudimos enviar el correo. Revisa EmailJS.', 'error');
+    } finally {
+        ocultarCargando();
+        if(btn) btn.disabled = false;
+    }
+};
+
+// --- COMPARTIR ---
 window.compartirJitsiWhatsApp = () => {
-    const msj = encodeURIComponent(`Hola, te invito a la reunión virtual: *${tituloReunionGlobal}*.\nEnlace: 👉 ${linkJitsiGlobal}`);
+    const msj = encodeURIComponent(`Hola, te invito a la reunión: *${tituloReunionGlobal}*.\n👉 Enlace: ${linkJitsiGlobal}`);
     window.open(`https://api.whatsapp.com/send?text=${msj}`, '_blank');
 };
 
 window.compartirJitsiCorreo = () => {
     const asunto = encodeURIComponent(`Reunión Virtual: ${tituloReunionGlobal}`);
-    const cuerpo = encodeURIComponent(`Para ingresar a la reunión, haga clic aquí:\n\n${linkJitsiGlobal}`);
+    const cuerpo = encodeURIComponent(`Para entrar a la reunión haz clic aquí:\n\n${linkJitsiGlobal}`);
     window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
 };
 
