@@ -163,12 +163,13 @@ window.enviarReserva = async () => {
         return Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Por favor completa todos los campos.', background: '#1e293b', color: '#fff' });
     }
 
-    // 1. Validar si la fecha ya pasó
-    const fechaElegida = new Date(fecha);
-    const hoy = new Date();
-    hoy.setHours(0,0,0,0);
-    if (fechaElegida < hoy) {
-        return Swal.fire({ icon: 'error', title: 'Fecha inválida', text: 'No puedes reservar en el pasado.', background: '#1e293b', color: '#fff' });
+    // 1. Validar si la fecha ya pasó (A prueba de Zonas Horarias)
+    const hoyLocal = new Date();
+    hoyLocal.setMinutes(hoyLocal.getMinutes() - hoyLocal.getTimezoneOffset());
+    const fechaHoyStr = hoyLocal.toISOString().split('T')[0]; // Ej: "2026-03-04"
+
+    if (fecha < fechaHoyStr) {
+        return Swal.fire({ icon: 'error', title: 'Fecha inválida', text: 'No puedes reservar en fechas pasadas.', background: '#1e293b', color: '#fff' });
     }
 
     Swal.fire({ title: 'Procesando...', allowOutsideClick: false, background: '#1e293b', color: '#fff', didOpen: () => Swal.showLoading() });
@@ -245,6 +246,12 @@ async function cargarZonasComunes() {
 // Pequeño truco para que si le das clic a "Piscina", el select ya aparezca en "Piscina"
 window.abrirModalReservaConZona = (nombreZona) => {
     document.getElementById('res-zona').value = nombreZona;
+    
+    // NUEVO: Bloquear visualmente los días anteriores en el calendario
+    const hoyLocal = new Date();
+    hoyLocal.setMinutes(hoyLocal.getMinutes() - hoyLocal.getTimezoneOffset());
+    document.getElementById('res-fecha').min = hoyLocal.toISOString().split('T')[0];
+
     abrirModal('modal-reserva');
 };
 

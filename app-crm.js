@@ -679,6 +679,9 @@ window.guardarGestionPQR = async () => {
 
         Swal.fire('Gestión Guardada', 'El caso ha sido actualizado exitosamente.', 'success');
         window.cerrarModal('modal-detalle');
+
+        // ¡LA MAGIA AQUÍ! Obligamos a la tabla a recargarse solita sin usar F5
+        cargarDatosRealtime();
         
     } catch (e) {
         console.error(e);
