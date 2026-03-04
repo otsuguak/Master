@@ -1536,12 +1536,12 @@ let linkJitsiGlobal = "";
 let tituloReunionGlobal = "";
 
 window.abrirModalJitsi = () => {
-    // ⚠️ CORRECCIÓN: Limpiamos los IDs correctos del nuevo formulario
-    const inputExpress = document.getElementById('jitsi-titulo-express');
-    const inputVip = document.getElementById('vip-motivo');
+    // Limpiamos los campos nuevos con seguridad
+    const expressInput = document.getElementById('jitsi-titulo-express');
+    const premiumInput = document.getElementById('vip-motivo');
     
-    if(inputExpress) inputExpress.value = '';
-    if(inputVip) inputVip.value = '';
+    if (expressInput) expressInput.value = '';
+    if (premiumInput) premiumInput.value = '';
 
     // Reiniciamos la vista a las tarjetas de selección
     document.getElementById('jitsi-opciones').classList.remove('hidden');
@@ -1647,7 +1647,7 @@ window.solicitarSalaPremium = async () => {
         const serviceID = 'service_yy0gcdm'; 
         
         // 🔥 ¡AQUÍ PEGAS EL TEMPLATE ID QUE ACABAS DE CREAR! 🔥
-        const templateID = 'template_0kwz3ij'; 
+        const templateID = 'template_57qohkp'; 
         
         const templateParams = {
             admin_email: usuarioActual.email, // Sacamos el correo del usuario logueado automáticamente
