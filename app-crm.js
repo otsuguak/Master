@@ -1536,18 +1536,23 @@ let linkJitsiGlobal = "";
 let tituloReunionGlobal = "";
 
 window.abrirModalJitsi = () => {
-    // Limpiamos los campos nuevos con seguridad
+    // Limpiamos los campos solo si existen en el HTML actual
     const expressInput = document.getElementById('jitsi-titulo-express');
-    const premiumInput = document.getElementById('vip-motivo');
+    const vipInput = document.getElementById('vip-motivo');
     
     if (expressInput) expressInput.value = '';
-    if (premiumInput) premiumInput.value = '';
+    if (vipInput) vipInput.value = '';
 
     // Reiniciamos la vista a las tarjetas de selección
-    document.getElementById('jitsi-opciones').classList.remove('hidden');
-    document.getElementById('jitsi-form-express').classList.add('hidden');
-    document.getElementById('jitsi-form-premium').classList.add('hidden');
-    document.getElementById('jitsi-step-share').classList.add('hidden');
+    const opciones = document.getElementById('jitsi-opciones');
+    const formExp = document.getElementById('jitsi-form-express');
+    const formVip = document.getElementById('jitsi-form-premium');
+    const stepShare = document.getElementById('jitsi-step-share');
+
+    if (opciones) opciones.classList.remove('hidden');
+    if (formExp) formExp.classList.add('hidden');
+    if (formVip) formVip.classList.add('hidden');
+    if (stepShare) stepShare.classList.add('hidden');
     
     document.getElementById('modal-admin-jitsi').classList.remove('hidden');
 };
