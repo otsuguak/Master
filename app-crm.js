@@ -320,25 +320,29 @@ window.registrarUsuario = async () => {
         Swal.fire('¡Éxito!', 'Usuario creado. Revisa tu correo si pedimos confirmación (depende de configuración).', 'success');
         mostrarLogin();
 
-    } catch (error) {
+   } catch (error) {
         console.error("Error original de Supabase:", error);
         let mensajeEspanol = "Ocurrió un error inesperado al registrar el usuario.";
 
-        if (error.message.includes("Password should be at least")) {
-            mensajeEspanol = "La contraseña es muy débil. Debe tener al menos 8 caracteres e incluir letras (mayúsculas/minúsculas) y números.";
-        } else if (error.message.includes("User already registered") || error.message.includes("already exists")) {
+        // Traducimos los errores al español, incluyendo el mensaje del Trigger
+        if (error.message && error.message.includes("Password should be at least")) {
+            mensajeEspanol = "La contraseña es muy débil. Debe tener al menos 8 caracteres.";
+        } else if (error.message && (error.message.includes("User already registered") || error.message.includes("already exists"))) {
             mensajeEspanol = "Este correo electrónico ya se encuentra registrado en el sistema.";
-        } else if (error.message.includes("Invalid email")) {
+        } else if (error.message && error.message.includes("Acceso Denegado")) {
+            mensajeEspanol = "Lo sentimos, el perfil administrador ya existe en este CRM.";
+        } else if (error.message && error.message.includes("Invalid email")) {
             mensajeEspanol = "El formato del correo electrónico no es válido.";
         } else {
             mensajeEspanol = error.message; 
         }
 
+        // AHORA SÍ: Mostramos la alerta roja de ERROR, no la verde de éxito
         Swal.fire({
-            title: '¡Registro Exitoso!',
-            text: 'Tu cuenta ha sido creada. Por favor, revisa tu bandeja de entrada para confirmar tu correo.',
-            icon: 'success',
-            confirmButtonColor: '#2563eb'
+            title: 'Error de Registro',
+            text: mensajeEspanol,
+            icon: 'error',
+            confirmButtonColor: '#d33'
         });
     } finally {
         ocultarCargando(); 
