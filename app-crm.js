@@ -84,6 +84,12 @@ function mostrarDashboard() {
     ocultar('register-section');
     mostrar('dashboard');
 
+    // NUEVO: El pellizco al navegador para arreglar el bug del teclado en celulares
+    setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+    }, 150);
+
     const dashNombre = document.getElementById('dash-nombre');
     if (dashNombre) dashNombre.innerText = usuarioActual.nombre;
 
