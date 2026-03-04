@@ -1479,3 +1479,27 @@ window.abrirDirectorio = async () => {
         Swal.fire('Error', 'No se pudo cargar la información del directorio.', 'error');
     }
 };
+
+// ==========================================
+//  CONTROL DE MENÚ MÓVIL RESPONSIVO
+// ==========================================
+window.toggleMenu = () => {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+    if(sidebar && overlay) {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+};
+
+// Cerrar el menú automáticamente al hacer clic en un botón en el celular
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('sidebar');
+    if(sidebar) {
+        sidebar.addEventListener('click', (e) => {
+            if (e.target.closest('button') && window.innerWidth < 768) {
+                window.toggleMenu();
+            }
+        });
+    }
+});

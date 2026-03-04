@@ -16,12 +16,14 @@
         .chat-bubble { max-width: 80%; border-radius: 12px; padding: 10px; margin-bottom: 8px; font-size: 0.9rem; }
         .chat-admin { background-color: #dbeafe; color: #1e40af; align-self: flex-start; border-bottom-left-radius: 2px; }
         .chat-user { background-color: #dcfce7; color: #166534; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans h-screen overflow-hidden">
 
-    <div id="login-section" class="flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 border-t-4 border-blue-600 fade-in">
+    <div id="login-section" class="flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border-t-4 border-blue-600 fade-in">
             <h2 class="text-3xl font-extrabold mb-2 text-center text-gray-800">CRM Master</h2>
             <p class="text-center text-gray-500 mb-6 text-sm">Ingresa a tu cuenta</p>
             
@@ -39,20 +41,20 @@
         </div>
     </div>
 
-    <div id="register-section" class="hidden flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-green-600 fade-in overflow-y-auto max-h-[90vh]">
+    <div id="register-section" class="hidden flex items-center justify-center h-full w-full absolute inset-0 bg-gray-100 z-50 p-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-green-600 fade-in overflow-y-auto max-h-[90vh] no-scrollbar">
             <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Nuevo Usuario</h2>
             
             <div class="space-y-3">
                 <input type="text" id="reg-nombre" placeholder="Nombre completo" class="w-full p-3 border rounded-lg">
                 <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full p-3 border rounded-lg">
                 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" id="reg-inmueble" placeholder="Apto / Casa" class="p-3 border rounded-lg">
                     <input type="tel" id="reg-celular" placeholder="Celular" class="p-3 border rounded-lg">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <select id="reg-rol" class="p-3 border rounded-lg bg-gray-50">
                         <option value="usuario">Residente</option>
                         <option value="agente">Administrador</option>
@@ -75,14 +77,20 @@
         </div>
     </div>
 
-    <div id="dashboard" class="hidden flex h-screen bg-gray-100">
-        <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-10">
+    <div id="dashboard" class="hidden h-screen bg-gray-100 flex overflow-hidden w-full relative">
+        
+        <div id="mobile-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-900/80 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-50 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out h-full">
+            <div class="md:hidden absolute top-4 right-4">
+                <button onclick="toggleMenu()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
             <div class="p-6 text-center border-b border-slate-800">
                 <h1 class="text-2xl font-bold text-blue-400"><i class="fas fa-shield-alt mr-2"></i>CRM Master</h1>
                 <p class="text-xs text-gray-400 mt-1">Gestión Inteligente</p>
             </div>
             
-            <nav class="flex-1 p-4 space-y-2">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
                 <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Menú</div>
                 
                 <button onclick="cargarDashboard()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
@@ -116,7 +124,7 @@
                     <i class="fas fa-address-book w-6 text-yellow-400"></i> Directorio
                 </button>
 
-            <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
+                <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
                     <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Portal Web</div>
                     
                     <button onclick="abrirModalNoticias()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
@@ -130,15 +138,14 @@
                     <button onclick="abrirModalInmuebles()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
                         <i class="fas fa-house-flag w-6 text-green-400"></i> Inmuebles
                     </button>
-            </div>    
-
+                </div>    
             </nav>
 
-            <div class="p-4 border-t border-slate-800">
+            <div class="p-4 border-t border-slate-800 shrink-0">
                 <div class="flex items-center mb-4">
                     <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">U</div>
-                    <div class="ml-3">
-                        <p id="dash-nombre" class="text-sm font-bold">Usuario</p>
+                    <div class="ml-3 truncate">
+                        <p id="dash-nombre" class="text-sm font-bold truncate">Usuario</p>
                         <p id="dash-rol" class="text-xs text-gray-400 capitalize">Rol</p>
                     </div>
                 </div>
@@ -148,101 +155,110 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-8 relative">
-            <header class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">Resumen de Actividad</h2>
-                <div class="flex items-center space-x-2">
-                   <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                   <span class="text-sm text-gray-500">Sistema en línea</span>
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-30">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-blue-400 text-xl"></i>
+                    <h1 class="text-xl font-bold tracking-tight">CRM Master</h1>
                 </div>
+                <button onclick="toggleMenu()" class="text-gray-300 hover:text-white focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase">Total Casos</p>
-                        <p id="kpi-total" class="text-3xl font-extrabold text-gray-800 mt-1">0</p>
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">Resumen de Actividad</h2>
+                    <div class="flex items-center space-x-2">
+                       <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                       <span class="text-sm text-gray-500">Sistema en línea</span>
                     </div>
-                    <div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-folder-open text-xl"></i></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase">Pendientes</p>
-                        <p id="kpi-pendientes" class="text-3xl font-extrabold text-orange-500 mt-1">0</p>
-                    </div>
-                    <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-clock text-xl"></i></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase">Resueltos</p>
-                        <p id="kpi-resueltos" class="text-3xl font-extrabold text-green-500 mt-1">0</p>
-                    </div>
-                    <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-check-circle text-xl"></i></div>
-                </div>
-            </div>
+                </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                        <h3 class="font-bold text-lg text-gray-700">Casos Recientes</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Total Casos</p>
+                            <p id="kpi-total" class="text-3xl font-extrabold text-gray-800 mt-1">0</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-folder-open text-xl"></i></div>
                     </div>
-
-                    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <select id="filtro-estado" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
-                            <option value="">Todos los Estados</option>
-                            <option value="abierto">Abierto</option>
-                            <option value="en proceso">En Proceso</option>
-                            <option value="escalado">Escalado</option>
-                            <option value="cerrado">Cerrado</option>
-                        </select>
-                        
-                        <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar por usuario..." class="p-2 border rounded text-sm outline-none focus:border-blue-500">
-                        
-                        <select id="filtro-tipo" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
-                            <option value="">Todos los Tipos</option>
-                            <option value="petición">Petición</option>
-                            <option value="queja">Queja</option>
-                            <option value="reclamo">Reclamo</option>
-                            <option value="felicitación">Felicitación</option>
-                        </select>
-
-                        <select id="filtro-categoria" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500">
-                            <option value="">Todas las Categorías</option>
-                            <option value="seguridad">Seguridad</option>
-                            <option value="aseo">Aseo</option>
-                            <option value="convivencia">Convivencia</option>
-                            <option value="mantenimiento">Mantenimiento</option>
-                            <option value="administración">Administración</option>
-                        </select>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Pendientes</p>
+                            <p id="kpi-pendientes" class="text-3xl font-extrabold text-orange-500 mt-1">0</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-clock text-xl"></i></div>
                     </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 border-b">
-                                <tr>
-                                    <th class="p-3 text-gray-500 font-semibold">ID Caso</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Estado</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Fecha</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Usuario</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Tipo</th>
-                                    <th class="p-3 text-gray-500 font-semibold">Categoría</th>
-                                    <th class="p-3 text-gray-500 font-semibold"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-body">
-                            </tbody>
-                        </table>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Resueltos</p>
+                            <p id="kpi-resueltos" class="text-3xl font-extrabold text-green-500 mt-1">0</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-check-circle text-xl"></i></div>
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
-                    <h3 class="font-bold text-lg mb-4 text-gray-700 w-full text-left">Distribución</h3>
-                    <div class="w-full h-64 relative">
-                        <canvas id="myChart"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-700">Casos Recientes</h3>
+                        </div>
+
+                        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <select id="filtro-estado" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todos los Estados</option>
+                                <option value="abierto">Abierto</option>
+                                <option value="en proceso">En Proceso</option>
+                                <option value="escalado">Escalado</option>
+                                <option value="cerrado">Cerrado</option>
+                            </select>
+                            <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar usuario..." class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                            <select id="filtro-tipo" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todos los Tipos</option>
+                                <option value="petición">Petición</option>
+                                <option value="queja">Queja</option>
+                                <option value="reclamo">Reclamo</option>
+                                <option value="felicitación">Felicitación</option>
+                            </select>
+                            <select id="filtro-categoria" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todas Categorías</option>
+                                <option value="seguridad">Seguridad</option>
+                                <option value="aseo">Aseo</option>
+                                <option value="convivencia">Convivencia</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="administración">Administración</option>
+                            </select>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3 text-gray-500 font-semibold">ID Caso</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Estado</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Fecha</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Usuario</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Tipo</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Categoría</th>
+                                        <th class="p-3 text-gray-500 font-semibold"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
+                        <h3 class="font-bold text-lg mb-4 text-gray-700 w-full text-left">Distribución</h3>
+                        <div class="w-full h-48 md:h-64 relative">
+                            <canvas id="myChart"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <div id="modal-crear" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
@@ -251,8 +267,8 @@
                 <h3 class="font-bold">Nuevo Reporte</h3>
                 <button onclick="cerrarModal('modal-crear')" class="hover:text-gray-200"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 md:p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-bold text-gray-500">Tipo</label>
                         <select id="pqr-tipo" class="w-full p-2 border rounded mt-1 bg-gray-50">
@@ -280,7 +296,7 @@
     </div>
 
     <div id="modal-detalle" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden fade-in">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
                 <div>
                     <h3 class="font-bold text-lg" id="det-titulo">Caso #000</h3>
@@ -289,7 +305,7 @@
                 <button onclick="cerrarModal('modal-detalle')" class="hover:text-gray-300"><i class="fas fa-times text-xl"></i></button>
             </div>
 
-            <div class="bg-gray-50 p-4 border-b shrink-0 grid grid-cols-2 gap-4 text-sm">
+            <div class="bg-gray-50 p-4 border-b shrink-0 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Solicitante</p>
                     <p class="font-bold text-gray-700" id="det-usuario">...</p>
@@ -298,14 +314,14 @@
                     <p class="text-xs text-gray-500 uppercase">Categoría</p>
                     <p class="font-bold text-gray-700" id="det-categoria">...</p>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-1 md:col-span-2">
                     <p class="text-xs text-gray-500 uppercase">Descripción Inicial</p>
                     <p class="text-gray-700 italic" id="det-descripcion">...</p>
-                    <a id="det-link" href="#" target="_blank" class="text-blue-600 text-xs hidden mt-1 hover:underline"><i class="fas fa-paperclip"></i> Ver adjunto original</a>
+                    <a id="det-link" href="#" target="_blank" class="text-blue-600 text-xs hidden mt-1 hover:underline break-all"><i class="fas fa-paperclip"></i> Ver adjunto original</a>
                 </div>
             </div>
 
-            <div id="zona-gestion" class="p-6 bg-white flex-1 overflow-y-auto">
+            <div id="zona-gestion" class="p-4 md:p-6 bg-white flex-1 overflow-y-auto">
                 <h4 class="font-bold text-gray-700 mb-3 border-b pb-2"><i class="fas fa-clipboard-check mr-2"></i>Gestión del Caso</h4>
                 
                 <div class="space-y-4">
@@ -320,7 +336,7 @@
 
                     <div id="zona-escalar" class="hidden bg-orange-50 p-3 rounded-lg border border-orange-200">
                         <label class="text-xs font-bold text-orange-700 uppercase"><i class="fas fa-user-share mr-1"></i> Escalar a:</label>
-                        <select id="gestion-asignado" class="w-full p-2 border border-orange-300 rounded mt-1 bg-white">
+                        <select id="gestion-asignado" class="w-full p-2 border border-orange-300 rounded mt-1 bg-white truncate">
                             <option value="">Cargando usuarios...</option>
                             </select>
                     </div>
@@ -332,11 +348,10 @@
                 </div>
             </div>
 
-            <div class="p-4 bg-gray-100 border-t shrink-0 flex justify-end gap-3">
-                <button onclick="cerrarModal('modal-detalle')" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium">Cancelar</button>
-                <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold shadow-md">Guardar Gestión</button>
+            <div class="p-4 bg-gray-100 border-t shrink-0 flex flex-col md:flex-row justify-end gap-3">
+                <button onclick="cerrarModal('modal-detalle')" class="w-full md:w-auto px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium">Cancelar</button>
+                <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold shadow-md">Guardar</button>
             </div>
-            
         </div>
     </div>
 
@@ -344,62 +359,63 @@
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
         <h2 class="text-xl font-semibold text-white tracking-wider animate-pulse">Procesando...</h2>
     </div>
+
     <div id="modal-admin-noticias" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i>Gestión de Cartelera Digital</h3>
+                <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i>Gestión de Cartelera</h3>
                 <button onclick="cerrarModal('modal-admin-noticias')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-6 rounded-xl border shadow-sm mb-6">
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
                     <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">Crear Nueva Publicación</h4>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="text-xs font-bold text-gray-500">Tipo de Etiqueta</label>
+                            <label class="text-xs font-bold text-gray-500">Etiqueta</label>
                             <select id="noti-tipo" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
-                                <option value="Informativo" class="text-blue-600 font-bold">Informativo (Azul)</option>
-                                <option value="Urgente" class="text-red-600 font-bold">Urgente (Rojo)</option>
-                                <option value="Alerta" class="text-orange-500 font-bold">Alerta (Naranja)</option>
-                                <option value="Exclusivo" class="text-purple-600 font-bold">Exclusivo (Morado)</option>
+                                <option value="Informativo" class="text-blue-600 font-bold">Informativo</option>
+                                <option value="Urgente" class="text-red-600 font-bold">Urgente</option>
+                                <option value="Alerta" class="text-orange-500 font-bold">Alerta</option>
+                                <option value="Exclusivo" class="text-purple-600 font-bold">Exclusivo</option>
                             </select>
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-500">Fecha de Publicación</label>
+                            <label class="text-xs font-bold text-gray-500">Fecha</label>
                             <input type="date" id="noti-fecha" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-xs font-bold text-gray-500">Título de la Noticia</label>
-                        <input type="text" id="noti-titulo" maxlength="80" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Mantenimiento de Acueducto">
+                        <label class="text-xs font-bold text-gray-500">Título</label>
+                        <input type="text" id="noti-titulo" maxlength="80" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Mantenimiento">
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-xs font-bold text-gray-500">Resumen (Para la tarjeta principal - Max 150 caracteres)</label>
-                        <textarea id="noti-resumen" rows="2" maxlength="150" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Breve descripción que enganche..."></textarea>
+                        <label class="text-xs font-bold text-gray-500">Resumen</label>
+                        <textarea id="noti-resumen" rows="2" maxlength="150" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-xs font-bold text-gray-500">Contenido Completo (Max 3000 caracteres)</label>
-                        <textarea id="noti-contenido" rows="6" maxlength="3000" class="w-full p-2.5 border rounded-lg mt-1 outline-none overflow-y-auto" placeholder="Escribe aquí todo el detalle del comunicado..."></textarea>
+                        <label class="text-xs font-bold text-gray-500">Contenido Completo</label>
+                        <textarea id="noti-contenido" rows="5" maxlength="3000" class="w-full p-2.5 border rounded-lg mt-1 outline-none overflow-y-auto"></textarea>
                     </div>
 
                     <div class="mb-4">
-                        <label class="text-xs font-bold text-gray-500">Imagen de Portada (JPG/PNG)</label>
+                        <label class="text-xs font-bold text-gray-500">Imagen</label>
                         <input type="file" id="noti-imagen" accept="image/*" class="w-full p-2 border rounded-lg mt-1 bg-gray-50">
                     </div>
 
                     <button onclick="guardarNoticia()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">
-                        <i class="fas fa-paper-plane mr-2"></i>Publicar Noticia
+                        <i class="fas fa-paper-plane mr-2"></i>Publicar
                     </button>
                 </div>
 
                 <div>
                     <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list mr-2"></i>Noticias Publicadas</h4>
-                    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
+                    <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-gray-100 border-b">
                                 <tr>
                                     <th class="p-3 text-gray-500">Fecha</th>
@@ -408,8 +424,7 @@
                                     <th class="p-3 text-center text-gray-500">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-noticias-admin">
-                                </tbody>
+                            <tbody id="tabla-noticias-admin"></tbody>
                         </table>
                     </div>
                 </div>
@@ -420,26 +435,23 @@
     <div id="modal-admin-reservas" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fas fa-tree-city mr-2"></i>Gestión de Reservas</h3>
+                <h3 class="font-bold text-lg"><i class="fas fa-tree-city mr-2"></i>Reservas</h3>
                 <button onclick="cerrarModal('modal-admin-reservas')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <p class="text-sm text-gray-500 mb-4">Administra las solicitudes de zonas comunes. Al aprobar o rechazar, simulemos que se envía un correo al residente.</p>
-                
-                <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                    <table class="w-full text-left text-sm">
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-gray-100 border-b">
                             <tr>
-                                <th class="p-3 text-gray-500">Fecha Solicitada</th>
+                                <th class="p-3 text-gray-500">Fecha</th>
                                 <th class="p-3 text-gray-500">Zona</th>
-                                <th class="p-3 text-gray-500">Apto / Email</th>
+                                <th class="p-3 text-gray-500">Contacto</th>
                                 <th class="p-3 text-gray-500">Estado</th>
                                 <th class="p-3 text-center text-gray-500">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-reservas-admin">
-                            </tbody>
+                        <tbody id="tabla-reservas-admin"></tbody>
                     </table>
                 </div>
             </div>
@@ -449,57 +461,48 @@
     <div id="modal-admin-config-zonas" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Parametrizar Zonas Comunes</h3>
+                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Parametrizar Zonas</h3>
                 <button onclick="cerrarModal('modal-admin-config-zonas')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-6 rounded-xl border shadow-sm mb-6">
-                    <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">Agregar Nueva Zona</h4>
-                    
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
-                            <label class="text-xs font-bold text-gray-500">Nombre de la Zona</label>
-                            <input type="text" id="conf-zona-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Piscina, Zona BBQ">
+                            <label class="text-xs font-bold text-gray-500">Nombre</label>
+                            <input type="text" id="conf-zona-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-500">Aforo (Opcional)</label>
-                            <input type="text" id="conf-zona-aforo" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: 15 personas">
+                            <label class="text-xs font-bold text-gray-500">Aforo</label>
+                            <input type="text" id="conf-zona-aforo" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-500">Ícono Visual</label>
+                            <label class="text-xs font-bold text-gray-500">Ícono</label>
                             <select id="conf-zona-icono" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                                 <option value="fa-water-ladder">🏊‍♂️ Piscina</option>
                                 <option value="fa-fire-burner">🍖 BBQ / Asador</option>
                                 <option value="fa-dumbbell">🏋️‍♀️ Gimnasio</option>
                                 <option value="fa-tree">🌳 Parque</option>
-                                <option value="fa-people-roof">🏠 Salón Social</option>
+                                <option value="fa-people-roof">🏠 Salón</option>
                                 <option value="fa-futbol">⚽ Cancha</option>
                             </select>
                         </div>
                     </div>
-
-                    <button onclick="guardarZonaComun()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold p-3 rounded-lg transition shadow-md">
-                        <i class="fas fa-plus mr-2"></i>Crear Zona
-                    </button>
+                    <button onclick="guardarZonaComun()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold p-3 rounded-lg transition shadow-md">Crear Zona</button>
                 </div>
 
-                <div>
-                    <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list mr-2"></i>Zonas Actuales en el Conjunto</h4>
-                    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-100 border-b">
-                                <tr>
-                                    <th class="p-3 text-gray-500">Ícono</th>
-                                    <th class="p-3 text-gray-500">Nombre de Zona</th>
-                                    <th class="p-3 text-gray-500">Aforo</th>
-                                    <th class="p-3 text-center text-gray-500">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-config-zonas">
-                                </tbody>
-                        </table>
-                    </div>
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Ícono</th>
+                                <th class="p-3 text-gray-500">Nombre</th>
+                                <th class="p-3 text-gray-500">Aforo</th>
+                                <th class="p-3 text-center text-gray-500">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-config-zonas"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -512,32 +515,30 @@
                 <button onclick="cerrarModal('modal-admin-inmuebles')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-6 rounded-xl border shadow-sm mb-6">
-                    <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">Publicar Nuevo Inmueble</h4>
-                    
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs font-bold text-gray-500">Tipo de Oferta</label>
+                                    <label class="text-xs font-bold text-gray-500">Oferta</label>
                                     <select id="inm-tipo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
                                         <option value="Se Arrienda" class="text-blue-600">Se Arrienda</option>
                                         <option value="Se Vende" class="text-green-600">Se Vende</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-gray-500">Precio (COP)</label>
-                                    <input type="number" id="inm-precio" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: 1500000">
+                                    <label class="text-xs font-bold text-gray-500">Precio</label>
+                                    <input type="number" id="inm-precio" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                                 </div>
                             </div>
                             
                             <div>
                                 <label class="text-xs font-bold text-gray-500">Título Corto</label>
-                                <input type="text" id="inm-titulo" maxlength="40" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Torre 3 - Apto 402">
+                                <input type="text" id="inm-titulo" maxlength="40" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                             </div>
 
-                            <div class="grid grid-cols-4 gap-2">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <div><label class="text-xs font-bold text-gray-500">Hab.</label><input type="number" id="inm-hab" class="w-full p-2 border rounded mt-1"></div>
                                 <div><label class="text-xs font-bold text-gray-500">Baños</label><input type="number" id="inm-banos" class="w-full p-2 border rounded mt-1"></div>
                                 <div><label class="text-xs font-bold text-gray-500">Mts²</label><input type="number" id="inm-area" class="w-full p-2 border rounded mt-1"></div>
@@ -546,55 +547,49 @@
                         </div>
 
                         <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs font-bold text-gray-500">Nombre Contacto</label>
-                                    <input type="text" id="inm-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Juan Pérez">
+                                    <label class="text-xs font-bold text-gray-500">Contacto</label>
+                                    <input type="text" id="inm-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-gray-500">WhatsApp (Sin +57)</label>
-                                    <input type="number" id="inm-tel" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="3001234567">
+                                    <label class="text-xs font-bold text-gray-500">WhatsApp</label>
+                                    <input type="number" id="inm-tel" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="text-xs font-bold text-gray-500">Descripción Completa</label>
-                                <textarea id="inm-desc" rows="3" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Hermoso apartamento con vista exterior..."></textarea>
+                                <label class="text-xs font-bold text-gray-500">Descripción</label>
+                                <textarea id="inm-desc" rows="3" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
                             </div>
 
-                            <div class="flex items-center gap-2 mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <input type="checkbox" id="inm-destacado" class="w-5 h-5 accent-yellow-500 cursor-pointer">
-                                <label for="inm-destacado" class="text-sm font-bold text-yellow-700 cursor-pointer">⭐ Marcar como Destacado (Aparecerá en el Inicio)</label>
+                            <div class="flex items-center gap-2 p-2 bg-yellow-50 border rounded-lg">
+                                <input type="checkbox" id="inm-destacado" class="w-5 h-5 accent-yellow-500 cursor-pointer shrink-0">
+                                <label for="inm-destacado" class="text-xs font-bold text-yellow-700 cursor-pointer">Marcar como Destacado (Inicio)</label>
                             </div>
 
-                            <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                <label class="text-xs font-bold text-blue-700 block mb-1"><i class="fas fa-images mr-1"></i> Subir Fotos (Máximo 6)</label>
-                                <input type="file" id="inm-fotos" accept="image/*" multiple class="w-full text-xs text-blue-600 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                            <div class="p-2 bg-blue-50 border rounded-lg">
+                                <label class="text-xs font-bold text-blue-700 block mb-1"><i class="fas fa-images"></i> Subir Fotos (Max 6)</label>
+                                <input type="file" id="inm-fotos" accept="image/*" multiple class="w-full text-xs text-blue-600">
                             </div>
                         </div>
                     </div>
 
-                    <button onclick="guardarInmueble()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-lg transition shadow-md">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i>Publicar Inmueble en el Catálogo
-                    </button>
+                    <button onclick="guardarInmueble()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-lg transition shadow-md">Publicar Inmueble</button>
                 </div>
 
-                <div>
-                    <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list mr-2"></i>Catálogo Activo</h4>
-                    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-100 border-b">
-                                <tr>
-                                    <th class="p-3 text-gray-500">Inmueble</th>
-                                    <th class="p-3 text-gray-500">Tipo y Precio</th>
-                                    <th class="p-3 text-gray-500">Contacto</th>
-                                    <th class="p-3 text-center text-gray-500">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-inmuebles-admin">
-                                </tbody>
-                        </table>
-                    </div>
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Inmueble</th>
+                                <th class="p-3 text-gray-500">Oferta</th>
+                                <th class="p-3 text-gray-500">Contacto</th>
+                                <th class="p-3 text-center text-gray-500">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inmuebles-admin"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -603,50 +598,46 @@
     <div id="modal-admin-portada" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in max-h-[90vh] flex flex-col">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Configuración General</h3>
+                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Configuración</h3>
                 <button onclick="cerrarModal('modal-admin-portada')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto">
-                <h4 class="font-bold text-blue-600 mb-3 border-b pb-1"><i class="fas fa-image mr-1"></i> Textos del Portal</h4>
+            <div class="p-4 md:p-6 overflow-y-auto">
+                <h4 class="font-bold text-blue-600 mb-3 border-b pb-1">Textos del Portal</h4>
                 <div class="mb-4">
-                    <label class="text-xs font-bold text-gray-500">Título Principal</label>
-                    <input type="text" id="conf-hero-titulo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: Tu Comunidad Inteligente">
+                    <label class="text-xs font-bold text-gray-500">Título</label>
+                    <input type="text" id="conf-hero-titulo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
                 </div>
                 <div class="mb-6">
-                    <label class="text-xs font-bold text-gray-500">Descripción / Subtítulo</label>
-                    <textarea id="conf-hero-desc" rows="2" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none" placeholder="Noticias, reservas..."></textarea>
+                    <label class="text-xs font-bold text-gray-500">Descripción</label>
+                    <textarea id="conf-hero-desc" rows="2" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
                 </div>
 
-                <h4 class="font-bold text-green-600 mb-3 border-b pb-1"><i class="fas fa-address-book mr-1"></i> Números del Directorio</h4>
+                <h4 class="font-bold text-green-600 mb-3 border-b pb-1">Números del Directorio</h4>
                 <div class="mb-4">
-                    <label class="text-xs font-bold text-gray-500">WhatsApp Administración (Código país + Número)</label>
-                    <input type="number" id="conf-tel-admin" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 573001234567">
+                    <label class="text-xs font-bold text-gray-500">WhatsApp Administración (Con Código)</label>
+                    <input type="number" id="conf-tel-admin" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="text-xs font-bold text-gray-500">Tel. Portería</label>
-                        <input type="number" id="conf-tel-porteria" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 6015555555">
+                        <input type="number" id="conf-tel-porteria" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500">Tel. Cuadrante (Policía)</label>
-                        <input type="number" id="conf-tel-policia" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold" placeholder="Ej: 123 o Celular">
+                        <label class="text-xs font-bold text-gray-500">Tel. Policía</label>
+                        <input type="number" id="conf-tel-policia" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
                     </div>
                 </div>
 
-                <button onclick="guardarPortada()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">
-                    Guardar Configuración
-                </button>
+                <button onclick="guardarPortada()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">Guardar Configuración</button>
             </div>
         </div>
     </div>
     
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            emailjs.init("B7GLHBAWKdYQWKj-u"); // Pega tu Public Key aquí
+            emailjs.init("B7GLHBAWKdYQWKj-u"); 
         })();
     </script>
     <script type="module" src="app-crm.js" defer></script>
