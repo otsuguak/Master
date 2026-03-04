@@ -385,41 +385,31 @@ async function cargarDatosRealtime() {
     let query = supabase.from('tickets').select('*').order('fecha', { ascending: false });
     
     if (usuarioActual.rol !== 'agente') {
-        query = query.eq('usuario_id', usuarioActual.id);
+        // MAGIA: El usuario ve los casos que él creó, O los que le asignaron (escalados)
+        query = query.or(`usuario_id.eq.${usuarioActual.id},asignado_a.eq.${usuarioActual.id}`);
     }
 
     mostrarCargando();
     try {
         const { data: tickets, error } = await query;
-        if(!error && tickets) {
-            procesarYRenderizarTickets(tickets);
-        }
+        if(!error && tickets) procesarYRenderizarTickets(tickets);
     } finally {
         ocultarCargando();
     }
 
     if(suscripcionTickets) supabase.removeChannel(suscripcionTickets);
 
-    let channelFilter = '*';
-    if(usuarioActual.rol !== 'agente'){
-        channelFilter = `usuario_id=eq.${usuarioActual.id}`;
-    }
-
+    // Quitamos el filtro estricto del canal, la Base de Datos (RLS) hará el filtrado seguro
     suscripcionTickets = supabase
       .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tickets', filter: channelFilter },
-        async (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, async (payload) => {
           const { data: newData } = await query;
           if(newData) procesarYRenderizarTickets(newData);
           
           if(pqrSeleccionadoID && payload.new && payload.new.id === pqrSeleccionadoID){
               renderizarModalDetalle(payload.new);
           }
-        }
-      )
-      .subscribe();
+      }).subscribe();
 }
 
 function procesarYRenderizarTickets(tickets) {
@@ -606,8 +596,8 @@ function renderizarModalDetalle(data) {
     const panelGestion = document.getElementById('zona-gestion');
     const pieModal = document.querySelector('#modal-detalle .border-t.shrink-0'); 
 
-    if (usuarioActual.rol === 'agente') {
-        // El administrador ve los controles para cambiar estado y escalar
+    // MAGIA: Mostramos el panel de respuesta si es Admin, O si es el colaborador asignado
+    if (usuarioActual.rol === 'agente' || data.asignado_a === usuarioActual.id) {
         const selectEstado = document.getElementById('gestion-estado');
         if (selectEstado) {
             selectEstado.value = data.estado === 'Abierto' ? 'En Proceso' : data.estado;
@@ -635,18 +625,26 @@ window.evaluarEstadoEscalamiento = async () => {
     
     if (estado === 'Escalado') {
         divEscalar.classList.remove('hidden');
-        // Cargar lista de usuarios que NO son el usuario actual ni el residente que creó el PQR
+        
+        // 1. Consultamos la palabra clave paramétrica (ej: STAFF)
+        const { data: conf } = await supabase.from('configuracion').select('codigo_staff').eq('id', 1).single();
+        const palabraClave = conf?.codigo_staff || 'STAFF';
+
+        // 2. MAGIA: Solo traemos a los usuarios que tengan esa palabra en su campo Inmueble
         const { data: usuarios, error } = await supabase
             .from('usuarios')
-            .select('id, nombre, email, rol')
+            .select('id, nombre, email, rol, inmueble')
+            .eq('inmueble', palabraClave)
             .neq('id', usuarioActual.id);
             
         const select = document.getElementById('gestion-asignado');
         select.innerHTML = '<option value="">Seleccione a quién escalar...</option>';
-        if (usuarios) {
+        if (usuarios && usuarios.length > 0) {
             usuarios.forEach(u => {
-                select.innerHTML += `<option value="${u.id}">${u.nombre} (${u.rol}) - ${u.email}</option>`;
+                select.innerHTML += `<option value="${u.id}">${u.nombre} - ${u.email}</option>`;
             });
+        } else {
+            select.innerHTML = `<option value="">No hay usuarios con el código "${palabraClave}"</option>`;
         }
     } else {
         divEscalar.classList.add('hidden');
@@ -1398,6 +1396,7 @@ window.abrirModalPortada = async () => {
         document.getElementById('conf-tel-admin').value = data.tel_admin || '';
         document.getElementById('conf-tel-porteria').value = data.tel_porteria || '';
         document.getElementById('conf-tel-policia').value = data.tel_policia || '';
+        document.getElementById('conf-codigo-staff').value = data.codigo_staff || 'STAFF';
     }
     ocultarCargando();
 };
@@ -1408,6 +1407,7 @@ window.guardarPortada = async () => {
     const telAdmin = document.getElementById('conf-tel-admin').value.trim();
     const telPorteria = document.getElementById('conf-tel-porteria').value.trim();
     const telPolicia = document.getElementById('conf-tel-policia').value.trim();
+    const codigoStaff = document.getElementById('conf-codigo-staff').value.trim().toUpperCase() || 'STAFF';
     
     if(!titulo) return Swal.fire('Atención', 'El título principal es obligatorio.', 'warning');
 
@@ -1419,7 +1419,8 @@ window.guardarPortada = async () => {
             desc_hero: desc,
             tel_admin: telAdmin,
             tel_porteria: telPorteria,
-            tel_policia: telPolicia
+            tel_policia: telPolicia,
+            codigo_staff: codigoStaff // Guardamos en la BD
         });
         
         if (error) throw error;
