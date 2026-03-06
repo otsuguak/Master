@@ -2,379 +2,814 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRM Master - Sistema de Gestión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Master - Gestión PQR</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
-        .font-master { font-family: 'Outfit', sans-serif; }
-        .glass-effect { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        /* Animaciones suaves */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chat-bubble { max-width: 80%; border-radius: 12px; padding: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+        .chat-admin { background-color: #dbeafe; color: #1e40af; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-user { background-color: #dcfce7; color: #166534; align-self: flex-end; border-bottom-right-radius: 2px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ==========================================
+           MODO MASTER: OBSIDIAN & GLASS (LOGIN)
+           ========================================== */
+        .master-bg { background-color: #020617; } /* Ultra Dark Slate */
         
-        .h-dvh { height: 100vh; height: 100dvh; }
-        .min-h-dvh { min-height: 100vh; min-height: 100dvh; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .ambient-light-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(80px); animation: float-slow 12s infinite alternate ease-in-out; pointer-events: none; }
+        .ambient-light-2 { position: absolute; bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(100px); animation: float-slow 18s infinite alternate-reverse ease-in-out; pointer-events: none; }
+        @keyframes float-slow { 0% { transform: translate(0, 0); } 100% { transform: translate(50px, 50px); } }
 
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* ===================================================
-           ESTILOS EDICIÓN MASTER (OBSIDIAN & GLASS)
-           =================================================== */
-        .master-bg { background-color: #030712; }
+        .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         
-        .orb-1 {
-            position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%; filter: blur(60px); animation: float 15s infinite alternate ease-in-out; pointer-events: none;
-        }
-        .orb-2 {
-            position: absolute; bottom: -20%; right: -10%; width: 60vw; height: 60vw;
-            background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%; filter: blur(80px); animation: float 20s infinite alternate-reverse ease-in-out; pointer-events: none;
-        }
+        .input-master { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: #f8fafc; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .input-master:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); background: rgba(0, 0, 0, 0.5); outline: none; }
+        .input-master::placeholder { color: #64748b; }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.1); }
-        }
-
-        .glass-card-master {
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .glass-input-master {
-            background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white; transition: all 0.3s ease;
-        }
-        .glass-input-master:focus {
-            background: rgba(0, 0, 0, 0.4); border-color: rgba(56, 189, 248, 0.5);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); outline: none;
-        }
-
-        .btn-master {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            background-size: 200% auto; transition: 0.5s; color: white; border: none;
-        }
-        .btn-master:hover {
-            background-position: right center; box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-        }
+        .btn-master { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); transition: all 0.4s ease; background-size: 200% auto; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-master:hover { background-position: right center; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transform: translateY(-2px); }
     </style>
 </head>
-<body class="text-gray-800 w-full h-dvh overflow-hidden">
 
-    <div id="loading-pro" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-md transition-opacity duration-700 font-master">
-        <div class="relative w-24 h-24">
-            <div class="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin"></div>
-            <div class="absolute inset-2 rounded-full border-r-2 border-blue-400 animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
-            <div class="absolute inset-4 rounded-full border-b-2 border-cyan-300 animate-spin" style="animation-duration: 2s;"></div>
-        </div>
-        <h2 id="loader-title" class="mt-8 text-white text-2xl font-light tracking-widest uppercase">Iniciando <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Sistema</span></h2>
-        <p id="loader-subtitle" class="mt-2 text-slate-400 text-sm animate-pulse">Estableciendo conexión segura...</p>
-    </div>
+<body class="bg-gray-100 font-sans h-[100dvh] overflow-hidden">
 
-    <div id="login-section" class="flex h-dvh w-full master-bg relative overflow-hidden font-master text-slate-300 items-center justify-center">
-        <div class="orb-1 z-0"></div>
-        <div class="orb-2 z-0"></div>
+    <div id="login-section" class="flex items-center justify-center h-[100dvh] w-full absolute inset-0 master-bg z-50 p-4 sm:p-8 overflow-hidden">
+        <div class="ambient-light-1"></div>
+        <div class="ambient-light-2"></div>
 
-        <div class="relative z-10 w-full max-w-5xl p-6 flex flex-col md:flex-row items-center gap-12">
-            <div class="flex-1 text-center md:text-left">
-                <div class="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-6">
-                    <span class="text-xs font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase">Edición Master</span>
+        <div class="w-full max-w-6xl h-full max-h-[800px] flex rounded-3xl overflow-hidden relative z-10 fade-in border border-white/5 shadow-2xl">
+            
+            <div class="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 bg-black/40 backdrop-blur-sm border-r border-white/5">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-luminosity"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent"></div>
+                
+                <div class="relative z-10">
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-6">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span> Sistema Encriptado
+                    </div>
+                    <h1 class="text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
+                        El control de tu <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Comunidad.</span>
+                    </h1>
+                    <p class="text-slate-400 text-lg max-w-md font-light leading-relaxed">Accede al centro de mando definitivo. Gestión de casos, reservas y comunicaciones en tiempo real.</p>
                 </div>
-                <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-4">Gestión <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Sin Límites.</span></h1>
-                <p class="text-lg text-slate-400 font-light max-w-md mx-auto md:mx-0">
-                    El centro de mando definitivo para tu copropiedad. Inteligencia, velocidad y control absoluto en una sola plataforma.
-                </p>
+
+                <div class="relative z-10 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white text-xl"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <p class="text-white font-bold text-sm">CRM Master</p>
+                        <p class="text-slate-500 text-xs">V. 1.0.1 | Acceso Autorizado</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="w-full max-w-md">
-                <div class="glass-card-master rounded-3xl p-8 md:p-10 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
-                    
-                    <h2 class="text-2xl font-bold text-white mb-2">Acceso Seguro</h2>
-                    <p class="text-sm text-slate-400 mb-8">Ingresa tus credenciales del sistema.</p>
+            <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 glass-panel relative">
+                <div class="lg:hidden absolute top-8 left-0 w-full text-center">
+                    <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 tracking-tight"><i class="fas fa-shield-alt mr-2 text-blue-500"></i>CRM MASTER</h2>
+                </div>
 
+                <div class="w-full max-w-sm mt-12 lg:mt-0">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-white mb-2">Bienvenido</h2>
+                        <p class="text-slate-400 text-sm">Ingresa tus credenciales para continuar.</p>
+                    </div>
+                    
                     <div class="space-y-5">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico</label>
-                            <input type="email" id="email-input" placeholder="ejemplo@master.com" class="glass-input-master w-full px-4 py-3.5 rounded-xl text-sm placeholder-slate-600">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Correo Electrónico</label>
+                            <input type="email" id="email-input" placeholder="correo@ejemplo.com" class="input-master w-full p-3.5 rounded-xl text-sm">
                         </div>
+                        
                         <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Contraseña</label>
-                                <a href="#" onclick="mostrarRecuperacion()" class="text-xs text-blue-400 hover:text-blue-300 transition">¿Olvidaste tu clave?</a>
+                            <div class="flex justify-between items-center mb-2 ml-1">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contraseña</label>
+                                <a href="#" onclick="recuperarClave()" class="text-[11px] text-blue-400 hover:text-blue-300 transition font-medium">¿Olvidaste tu clave?</a>
                             </div>
-                            <input type="password" id="pass-input" placeholder="••••••••" class="glass-input-master w-full px-4 py-3.5 rounded-xl text-sm placeholder-slate-600">
+                            <input type="password" id="pass-input" placeholder="••••••••" class="input-master w-full p-3.5 rounded-xl text-sm">
                         </div>
+                        
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Entorno de Acceso</label>
-                            <select id="role-input" class="glass-input-master w-full px-4 py-3.5 rounded-xl text-sm text-slate-300 appearance-none cursor-pointer">
-                                <option value="usuario" class="bg-slate-900 text-white">Residente Master</option>
-                                <option value="agente" class="bg-slate-900 text-white">Panel de Administración</option>
-                            </select>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Tipo de Acceso</label>
+                            <div class="relative">
+                                <select id="role-input" class="input-master w-full p-3.5 rounded-xl text-sm appearance-none cursor-pointer">
+                                    <option value="usuario" class="bg-slate-900 text-white">Residente</option>
+                                    <option value="agente" class="bg-slate-900 text-white">Administrador</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
                         </div>
-
-                        <button onclick="login()" class="btn-master w-full py-4 rounded-xl font-bold tracking-wide mt-4 transform hover:-translate-y-0.5">
-                            Iniciar Sesión
+                        
+                        <button onclick="iniciarSesion()" class="btn-master w-full text-white p-3.5 rounded-xl font-bold mt-4 flex items-center justify-center group shadow-lg">
+                            Ingresar al Sistema <i class="fas fa-arrow-right ml-2 opacity-70 group-hover:translate-x-1 transition-transform"></i>
                         </button>
                     </div>
-                    <p class="text-center mt-6 text-sm text-slate-400">¿Nuevo en la plataforma? <a href="#" onclick="mostrarRegistro()" class="text-blue-400 font-bold hover:text-blue-300 transition">Solicitar cuenta</a></p>
+
+                    <p class="text-center text-slate-400 text-sm mt-8">
+                        ¿No tienes una cuenta? <a href="#" onclick="mostrarRegistro()" class="text-white font-bold hover:text-blue-400 transition ml-1 border-b border-transparent hover:border-blue-400 pb-0.5">Solicitar acceso</a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="register-section" class="hidden h-dvh w-full master-bg relative overflow-hidden font-master text-slate-300 flex items-center justify-center">
-        <div class="orb-1 z-0"></div>
-        <div class="orb-2 z-0"></div>
-        <div class="relative z-10 w-full max-w-lg p-6">
-            <div class="glass-card-master rounded-3xl p-8 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-50"></div>
-                
-                <h2 class="text-3xl font-bold text-white mb-2 text-center">Crear Cuenta</h2>
-                <p class="text-sm text-slate-400 mb-6 text-center">Únete a la plataforma de gestión.</p>
-                
-                <div class="space-y-4">
-                    <input type="text" id="reg-nombre" placeholder="Nombre completo" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    <input type="email" id="reg-email" placeholder="Correo electrónico" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    <div class="grid grid-cols-2 gap-4">
-                        <select id="reg-rol" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm appearance-none cursor-pointer">
-                            <option value="usuario" class="bg-slate-900 text-white">Usuario</option>
-                            <option value="agente" class="bg-slate-900 text-white">Administrador</option>
-                        </select>
-                        <input type="tel" id="reg-celular" placeholder="Celular / WhatsApp" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="reg-inmueble" placeholder="Apto / Casa" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                        <select id="reg-tipo-residente" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm appearance-none cursor-pointer">
-                            <option value="" disabled selected class="bg-slate-900 text-gray-500">Tipo</option>
-                            <option value="Propietario" class="bg-slate-900 text-white">Propietario</option>
-                            <option value="Arrendatario" class="bg-slate-900 text-white">Arrendatario</option>
-                        </select>
-                    </div>
-                    <input type="password" id="reg-pass" placeholder="Contraseña" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    <input type="password" id="reg-pass-confirm" placeholder="Confirmar contraseña" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    
-                    <div class="flex items-center px-4 py-3 glass-input-master rounded-xl mt-2">
-                        <input type="checkbox" id="captcha" class="w-4 h-4 rounded border-gray-300 cursor-pointer accent-blue-500">
-                        <label for="captcha" class="ml-3 text-sm text-slate-300 cursor-pointer select-none">Confirmar que no soy un robot</label>
-                    </div>
-                    
-                    <button onclick="registrarUsuario()" class="w-full py-3 rounded-xl font-bold mt-4 shadow-md transition" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                        Registrarme Ahora
-                    </button>
-                    <button onclick="mostrarLogin()" class="w-full text-slate-400 text-sm hover:text-white transition mt-2">Volver al inicio de sesión</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="register-section" class="hidden flex items-center justify-center h-[100dvh] w-full absolute inset-0 master-bg z-50 p-4 overflow-hidden">
+        <div class="ambient-light-1"></div>
+        <div class="ambient-light-2" style="background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 70%);"></div>
 
-    <div id="recovery-section" class="hidden h-dvh w-full master-bg relative overflow-hidden font-master text-slate-300 flex items-center justify-center">
-        <div class="orb-1 z-0"></div>
-        <div class="orb-2 z-0"></div>
-        <div class="relative z-10 w-full max-w-md p-6">
-            <div class="glass-card-master rounded-3xl p-8 relative overflow-hidden text-center">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-50"></div>
-                
-                <h2 class="text-3xl font-bold text-white mb-2">Recuperar Acceso</h2>
-                <p class="text-sm text-slate-400 mb-8">Te ayudaremos a restablecer tu contraseña.</p>
-                
-                <div id="step-1-otp">
-                    <div class="text-left mb-4">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico</label>
-                        <input type="email" id="rec-email" placeholder="ejemplo@correo.com" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    </div>
-                    <div class="text-left mb-6">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Inmueble</label>
-                        <input type="text" id="rec-inmueble" placeholder="Ej: 2101" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    </div>
-                    <button onclick="solicitarCodigo()" class="w-full py-3 rounded-xl font-bold shadow-md transition" style="background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: white;">Enviar Código</button>
-                </div>
-                
-                <div id="step-2-otp" class="hidden">
-                    <p class="text-xs text-green-400 mb-6 font-bold bg-green-900/30 p-3 rounded-xl border border-green-500/30">¡Código enviado! Revisa tu bandeja de entrada.</p>
-                    <div class="text-left mb-4">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Código de 6 dígitos</label>
-                        <input type="number" id="rec-codigo" placeholder="123456" class="glass-input-master w-full px-4 py-3 rounded-xl text-center tracking-widest text-xl font-bold">
-                    </div>
-                    <div class="text-left mb-6">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nueva Contraseña</label>
-                        <input type="password" id="rec-pass" placeholder="••••••••" class="glass-input-master w-full px-4 py-3 rounded-xl text-sm">
-                    </div>
-                    <button onclick="cambiarPasswordConCodigo()" class="w-full py-3 rounded-xl font-bold shadow-md transition" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">Confirmar Cambio</button>
-                </div>
-                
-                <button onclick="ocultarRecuperacion()" class="w-full text-slate-400 text-sm mt-6 hover:text-white transition">Cancelar y volver al inicio</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="dashboard" class="hidden w-full h-dvh bg-gray-50 relative">
-        
-        <nav class="fixed z-40 bg-slate-900 text-white shadow-[0_-4px_20px_rgba(0,0,0,0.2)] md:shadow-xl transition-all duration-300
-                    bottom-0 left-0 w-full h-16 flex flex-row justify-around items-center px-2 pb-safe
-                    md:top-0 md:bottom-auto md:w-64 md:h-dvh md:flex-col md:justify-start md:p-6 md:px-4">
+        <div class="glass-panel p-8 md:p-10 rounded-3xl w-full max-w-lg fade-in overflow-y-auto max-h-[90vh] custom-scroll relative z-10 border-t border-t-emerald-500/30">
+            <h2 class="text-3xl font-extrabold mb-2 text-white">Crear Cuenta</h2>
+            <p class="text-slate-400 text-sm mb-8">Únete a la plataforma de gestión de la comunidad.</p>
             
-            <div class="hidden md:flex items-center space-x-2 mb-10 w-full justify-center shrink-0">
-                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                <h1 class="text-2xl font-bold tracking-wide">CRM<span class="text-blue-400">Master</span></h1>
-            </div>
-
-            <ul class="flex flex-row w-full justify-around items-center md:flex-col md:space-y-3 md:justify-start pt-1 md:pt-0">
-                <li class="cursor-pointer text-blue-400 font-bold rounded-xl p-2 md:bg-blue-600/20 md:p-3 flex flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Panel</span>
-                </li>
-                <li id="menu-crear" onclick="abrirModalPQR()" class="hidden flex cursor-pointer text-slate-400 hover:text-white rounded-xl p-2 md:hover:bg-slate-800 md:p-3 flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Crear</span>
-                </li>
-                <li id="menu-descargar" onclick="descargarExcel()" class="hidden flex cursor-pointer text-slate-400 hover:text-white rounded-xl p-2 md:hover:bg-slate-800 md:p-3 flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Exportar</span>
-                </li>
-                <li onclick="abrirModalDirectorio()" class="flex cursor-pointer text-slate-400 hover:text-white rounded-xl p-2 md:hover:bg-slate-800 md:p-3 flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Directorio</span>
-                </li>
-                <li id="menu-admin-noticias" onclick="abrirModalNoticias()" class="hidden flex cursor-pointer text-slate-400 hover:text-white rounded-xl p-2 md:hover:bg-slate-800 md:p-3 flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Noticias</span>
-                </li>
-                <li id="menu-admin-config" onclick="abrirModalConfig()" class="hidden flex cursor-pointer text-slate-400 hover:text-white rounded-xl p-2 md:hover:bg-slate-800 md:p-3 flex-col md:flex-row items-center justify-center md:justify-start transition w-20 md:w-full">
-                    <svg class="w-6 h-6 md:w-5 md:h-5 md:mr-3 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span class="text-[10px] md:text-base mt-1 md:mt-0 font-medium md:font-bold">Ajustes</span>
-                </li>
-            </ul>
-
-            <div class="hidden md:block w-full p-4 border-t border-slate-800 mt-auto shrink-0">
-                <li class="cursor-pointer hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg p-3 flex items-center transition list-none" onclick="location.reload()">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    <span>Cerrar Sesión</span>
-                </li>
-            </div>
-        </nav>
-
-        <main class="absolute top-0 left-0 w-full h-dvh overflow-y-auto bg-gray-50 custom-scroll pb-24 md:pb-8 md:pl-64"> 
-            
-            <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-30">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    <h1 class="text-xl font-bold tracking-wide">CRM<span class="text-blue-400">Master</span></h1>
+            <div class="space-y-4">
+                <input type="text" id="reg-nombre" placeholder="Nombre completo" class="input-master w-full p-3.5 rounded-xl text-sm">
+                <input type="email" id="reg-email" placeholder="Correo electrónico" class="input-master w-full p-3.5 rounded-xl text-sm">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="reg-inmueble" placeholder="Apto / Casa" class="input-master p-3.5 rounded-xl text-sm">
+                    <input type="tel" id="reg-celular" placeholder="Celular" class="input-master p-3.5 rounded-xl text-sm">
                 </div>
-                <button onclick="location.reload()" class="text-red-400 hover:text-red-300 p-1 flex items-center text-sm font-bold">
-                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    Salir
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <select id="reg-rol" class="input-master p-3.5 rounded-xl text-sm appearance-none cursor-pointer">
+                        <option value="usuario" class="bg-slate-900">Residente</option>
+                        <option value="agente" class="bg-slate-900">Administrador</option>
+                    </select>
+                    <select id="reg-tipo-residente" class="input-master p-3.5 rounded-xl text-sm appearance-none cursor-pointer">
+                        <option value="Propietario" class="bg-slate-900">Propietario</option>
+                        <option value="Arrendatario" class="bg-slate-900">Arrendatario</option>
+                    </select>
+                </div>
+
+                <input type="password" id="reg-pass" placeholder="Contraseña segura" class="input-master w-full p-3.5 rounded-xl text-sm">
+                
+                <button onclick="registrarUsuario()" class="w-full text-white p-3.5 rounded-xl font-bold mt-6 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.4)] transition hover:-translate-y-0.5" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid rgba(255,255,255,0.1);">
+                    Completar Registro
+                </button>
+                
+                <button onclick="mostrarLogin()" class="w-full text-slate-500 text-sm mt-4 hover:text-white transition">
+                    <i class="fas fa-arrow-left mr-1"></i> Cancelar y volver
                 </button>
             </div>
+        </div>
+    </div>
 
-            <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
+    <div id="dashboard" class="hidden h-[100dvh] bg-gray-100 flex overflow-hidden w-full relative">
+        
+        <div id="mobile-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-900/80 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-50 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-10">
+            
+            <div class="md:hidden absolute top-4 right-4 z-50">
+                <button onclick="toggleMenu()" class="text-gray-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-lg"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 text-center border-b border-slate-800 shrink-0">
+                <h1 class="text-2xl font-bold text-blue-400"><i class="fas fa-shield-alt mr-2"></i>CRM Master</h1>
+                <p class="text-xs text-gray-400 mt-1">Gestión Inteligente</p>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 shrink-0">
+                <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Menú</div>
                 
-                <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 gap-3">
-                    <div>
-                        <h2 id="welcome-text" class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Bienvenido</h2>
-                        <p class="text-xs md:text-sm text-gray-500 mt-1">Aquí está el resumen de tu gestión de hoy.</p>
+                <button onclick="cargarDashboard()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                    <i class="fas fa-chart-pie w-6"></i> Panel Principal
+                </button>
+
+                <button id="btn-nuevo-pqr" onclick="abrirModalCrear()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-plus-circle w-6 text-green-400"></i> Nuevo Caso
+                </button>
+
+                <button id="btn-exportar" onclick="exportarExcel()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-file-excel w-6 text-green-400"></i> Exportar Datos
+                </button>
+                
+                <div id="btn-config-index" class="hidden flex-col w-full">
+                    <button onclick="document.getElementById('submenu-parametrizar').classList.toggle('hidden')" class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <div class="flex items-center"><i class="fas fa-cogs w-6 text-purple-400"></i> Parametrizar Inicio</div>
+                        <i class="fas fa-chevron-down text-xs text-slate-500"></i>
+                    </button>
+                    <div id="submenu-parametrizar" class="hidden flex-col bg-slate-900/50 rounded-lg mt-1 overflow-hidden border border-slate-700/50">
+                        <button onclick="abrirModalConfigZonas()" class="w-full flex items-center p-3 pl-10 hover:bg-slate-800 transition text-left text-sm text-gray-300">
+                            <i class="fas fa-tree-city w-5 text-purple-400"></i> Zonas Comunes
+                        </button>
+                        <button onclick="abrirModalPortada()" class="w-full flex items-center p-3 pl-10 hover:bg-slate-800 transition text-left text-sm text-gray-300">
+                            <i class="fas fa-image w-5 text-blue-400"></i> Portada y Banner
+                        </button>
                     </div>
-                    <span id="role-badge" class="bg-blue-100 text-blue-800 px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold capitalize shadow-sm">Rol</span>
+                </div>
+                
+                <button id="btn-directorio" onclick="abrirDirectorio()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
+                    <i class="fas fa-address-book w-6 text-yellow-400"></i> Directorio
+                </button>
+
+                <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
+                    <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Portal Web</div>
+                    
+                    <button onclick="abrirModalNoticias()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-bullhorn w-6 text-blue-400"></i> Cartelera Digital
+                    </button>
+
+                    <button onclick="abrirModalJitsi()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left mt-2 border border-indigo-500/30 bg-indigo-500/10">
+                        <i class="fas fa-video w-6 text-indigo-400 animate-pulse"></i> Crear Sala Virtual
+                    </button>
+                    
+                    <button onclick="abrirModalReservas()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-calendar-check w-6 text-yellow-400"></i> Aprobar Reservas
+                    </button>
+
+                    <button onclick="abrirModalInmuebles()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
+                        <i class="fas fa-house-flag w-6 text-green-400"></i> Inmuebles
+                    </button>
+                </div>    
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 shrink-0 mt-auto">
+                <div class="flex items-center mb-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">U</div>
+                    <div class="ml-3 truncate">
+                        <p id="dash-nombre" class="text-sm font-bold truncate">Usuario</p>
+                        <p id="dash-rol" class="text-xs text-gray-400 capitalize">Rol</p>
+                    </div>
+                </div>
+                <button onclick="cerrarSesion()" class="w-full bg-red-600/20 text-red-400 p-2 rounded hover:bg-red-600/40 text-sm transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-30">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-blue-400 text-xl"></i>
+                    <h1 class="text-xl font-bold tracking-tight">CRM Master</h1>
+                </div>
+                <button onclick="toggleMenu()" class="text-gray-300 hover:text-white focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">Resumen de Actividad</h2>
+                    <div class="flex items-center space-x-2">
+                       <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                       <span class="text-sm text-gray-500">Sistema en línea</span>
+                    </div>
                 </header>
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Total Casos</p>
-                            <p id="kpi-total" class="text-xl md:text-3xl font-extrabold text-gray-800 mt-1">0</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Total Casos</p>
+                            <p id="kpi-total" class="text-3xl font-extrabold text-gray-800 mt-1">0</p>
                         </div>
-                        <div class="p-2.5 md:p-4 bg-blue-50 rounded-xl text-blue-600">
-                            <svg class="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-folder-open text-xl"></i></div>
                     </div>
-                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Sin Asignar</p>
-                            <p id="kpi-abiertos" class="text-xl md:text-3xl font-extrabold text-red-600 mt-1">0</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Pendientes</p>
+                            <p id="kpi-pendientes" class="text-3xl font-extrabold text-orange-500 mt-1">0</p>
                         </div>
-                        <div class="p-2.5 md:p-4 bg-red-50 rounded-xl text-red-600">
-                            <svg class="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-clock text-xl"></i></div>
                     </div>
-                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">En Gestión</p>
-                            <p id="kpi-proceso" class="text-xl md:text-3xl font-extrabold text-orange-500 mt-1">0</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Resueltos</p>
+                            <p id="kpi-resueltos" class="text-3xl font-extrabold text-green-500 mt-1">0</p>
                         </div>
-                        <div class="p-2.5 md:p-4 bg-orange-50 rounded-xl text-orange-500">
-                            <svg class="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                    </div>
-                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition">
-                        <div>
-                            <p class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Resueltos</p>
-                            <p id="kpi-cerrados" class="text-xl md:text-3xl font-extrabold text-green-600 mt-1">0</p>
-                        </div>
-                        <div class="p-2.5 md:p-4 bg-green-50 rounded-xl text-green-600">
-                            <svg class="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-check-circle text-xl"></i></div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 md:p-8 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="text-base md:text-lg font-bold mb-4 text-gray-800 border-b border-gray-100 pb-3">Tendencia de Casos</h3>
-                    <div class="relative h-48 md:h-64 w-full">
-                        <canvas id="myChart"></canvas>
-                    </div>
-                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-700">Casos Recientes</h3>
+                        </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                    <div class="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
-                        <h3 class="text-base md:text-lg font-bold text-gray-800">Listado de Solicitudes</h3>
-                        <div id="admin-filters" class="hidden flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                            <select id="filtro-tipo" onchange="filtrarTabla()" class="w-full sm:w-auto p-2 border border-gray-300 rounded-lg text-xs md:text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer text-gray-600 shadow-sm transition">
-                                <option value="Todos">Todos los Tipos</option>
-                                <option value="Petición">Peticiones</option>
-                                <option value="Queja">Quejas</option>
-                                <option value="Reclamo">Reclamos</option>
-                                <option value="Felicitación">Felicitaciones</option>
+                        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <select id="filtro-estado" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todos los Estados</option>
+                                <option value="abierto">Abierto</option>
+                                <option value="en proceso">En Proceso</option>
+                                <option value="escalado">Escalado</option>
+                                <option value="cerrado">Cerrado</option>
                             </select>
-                            <select id="filtro-estado" onchange="filtrarTabla()" class="w-full sm:w-auto p-2 border border-gray-300 rounded-lg text-xs md:text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer text-gray-600 shadow-sm transition">
-                                <option value="Todos">Todos los Estados</option>
-                                <option value="Abierto">Sin Asignar</option>
-                                <option value="En Proceso">En Gestión</option>
-                                <option value="Cerrado">Resueltos</option>
+                            <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar usuario..." class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                            <select id="filtro-tipo" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todos los Tipos</option>
+                                <option value="petición">Petición</option>
+                                <option value="queja">Queja</option>
+                                <option value="reclamo">Reclamo</option>
+                                <option value="felicitación">Felicitación</option>
+                            </select>
+                            <select id="filtro-categoria" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
+                                <option value="">Todas Categorías</option>
+                                <option value="seguridad">Seguridad</option>
+                                <option value="aseo">Aseo</option>
+                                <option value="convivencia">Convivencia</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="administración">Administración</option>
                             </select>
                         </div>
+
+                        <div class="overflow-x-auto rounded-lg border border-gray-100">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3 text-gray-500 font-semibold">ID Caso</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Estado</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Fecha</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Usuario</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Tipo</th>
+                                        <th class="p-3 text-gray-500 font-semibold">Categoría</th>
+                                        <th class="p-3 text-gray-500 font-semibold"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-body">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
+                        <h3 class="font-bold text-lg mb-4 text-gray-700 w-full text-left">Distribución</h3>
+                        <div class="w-full h-48 md:h-64 relative">
+                            <canvas id="myChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="modal-crear" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold">Nuevo Reporte</h3>
+                <button onclick="cerrarModal('modal-crear')" class="hover:text-gray-200"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 md:p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tipo</label>
+                        <select id="pqr-tipo" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                            <option>Petición</option><option>Queja</option><option>Reclamo</option><option>Felicitación</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Categoría</label>
+                        <select id="pqr-categoria" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                            <option>Seguridad</option><option>Aseo</option><option>Convivencia</option><option>Mantenimiento</option><option>Administración</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Descripción</label>
+                    <textarea id="pqr-desc" rows="3" class="w-full p-2 border rounded mt-1" placeholder="Detalle su caso..."></textarea>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500">Evidencia (Foto/PDF)</label>
+                    <input type="file" id="pqr-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <button id="btn-enviar" onclick="crearPQR()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Enviar Caso</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalle" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-2 md:p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[95vh] md:h-[85vh] flex flex-col overflow-hidden fade-in">
+            
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <div>
+                    <h3 class="font-bold text-lg" id="det-titulo">Caso #000</h3>
+                    <span id="det-estado" class="text-xs px-2 py-0.5 rounded bg-gray-600">Cargando...</span>
+                </div>
+                <button onclick="cerrarModal('modal-detalle')" class="hover:text-gray-300"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="bg-gray-50 p-4 md:p-6 flex-1 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-b pb-4 mb-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Solicitante</p>
+                        <p class="font-bold text-gray-700" id="det-usuario">...</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Categoría</p>
+                        <p class="font-bold text-gray-700" id="det-categoria">...</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-bold mb-2"><i class="fas fa-history mr-1"></i> Historial del Caso</p>
+                    <p class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed" id="det-descripcion">...</p>
+                    <a id="det-link" href="#" target="_blank" class="text-blue-600 text-sm font-bold hidden mt-4 hover:underline break-all inline-block bg-blue-50 px-3 py-2 rounded-lg border border-blue-100"><i class="fas fa-paperclip mr-1"></i> Ver evidencia adjunta original</a>
+                </div>
+            </div>
+
+            <div id="zona-gestion" class="p-4 bg-white border-t border-gray-200 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+                <h4 class="font-bold text-gray-700 mb-2 text-sm"><i class="fas fa-clipboard-check text-blue-500 mr-1"></i> Tu Respuesta</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                    <div>
+                        <select id="gestion-estado" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 outline-none focus:border-blue-500 font-medium" onchange="evaluarEstadoEscalamiento()">
+                            <option value="En Proceso">Dejar en Proceso</option>
+                            <option value="Escalado">Escalar Caso</option>
+                            <option value="Cerrado">Cerrar Caso</option>
+                        </select>
+                    </div>
+                    <div id="zona-escalar" class="hidden">
+                        <select id="gestion-asignado" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm bg-orange-50 outline-none focus:border-orange-500 truncate font-medium text-orange-800">
+                            <option value="">Cargando usuarios...</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <textarea id="gestion-notas" rows="2" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Escribe aquí tu gestión, diagnóstico o respuesta para el historial..."></textarea>
+                </div>
+            </div>
+
+            <div class="p-3 bg-gray-100 border-t shrink-0 flex justify-end gap-3">
+                <button onclick="cerrarModal('modal-detalle')" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition text-sm font-medium">Cancelar</button>
+                <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md">Guardar Gestión</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pantalla-carga" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex-col items-center justify-center z-[100] hidden transition-opacity duration-300">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+        <h2 class="text-xl font-semibold text-white tracking-wider animate-pulse">Procesando...</h2>
+    </div>
+
+    <div id="modal-admin-noticias" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i>Gestión de Cartelera</h3>
+                <button onclick="cerrarModal('modal-admin-noticias')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
+                    <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">Crear Nueva Publicación</h4>
                     
-                    <div class="overflow-x-auto custom-scroll w-full">
-                        <table class="w-full text-left whitespace-nowrap min-w-[600px]">
-                            <thead class="bg-gray-50 border-b border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Etiqueta</label>
+                            <select id="noti-tipo" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                <option value="Informativo" class="text-blue-600 font-bold">Informativo</option>
+                                <option value="Urgente" class="text-red-600 font-bold">Urgente</option>
+                                <option value="Alerta" class="text-orange-500 font-bold">Alerta</option>
+                                <option value="Exclusivo" class="text-purple-600 font-bold">Exclusivo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Fecha</label>
+                            <input type="date" id="noti-fecha" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Título</label>
+                        <input type="text" id="noti-titulo" maxlength="80" class="w-full p-2.5 border rounded-lg mt-1 outline-none" placeholder="Ej: Mantenimiento">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Resumen</label>
+                        <textarea id="noti-resumen" rows="2" maxlength="150" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Contenido Completo</label>
+                        <textarea id="noti-contenido" rows="5" maxlength="3000" class="w-full p-2.5 border rounded-lg mt-1 outline-none overflow-y-auto"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs font-bold text-gray-500">Imagen</label>
+                        <input type="file" id="noti-imagen" accept="image/*" class="w-full p-2 border rounded-lg mt-1 bg-gray-50">
+                    </div>
+
+                    <button onclick="guardarNoticia()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">
+                        <i class="fas fa-paper-plane mr-2"></i>Publicar
+                    </button>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-gray-700 mb-3"><i class="fas fa-list mr-2"></i>Noticias Publicadas</h4>
+                    <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-100 border-b">
                                 <tr>
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider">ID</th>
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider">Fecha</th> 
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider">Usuario</th>
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider">Tipo</th>
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider">Estado</th>
-                                    <th class="p-3 md:p-4 font-bold text-gray-500 uppercase text-[10px] md:text-xs tracking-wider text-center">Acciones</th>
+                                    <th class="p-3 text-gray-500">Fecha</th>
+                                    <th class="p-3 text-gray-500">Título</th>
+                                    <th class="p-3 text-gray-500">Tipo</th>
+                                    <th class="p-3 text-center text-gray-500">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="pqr-table-body" class="divide-y divide-gray-100"></tbody>
+                            <tbody id="tabla-noticias-admin"></tbody>
                         </table>
                     </div>
                 </div>
-            </div> 
-        </main>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="modal-admin-reservas" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-tree-city mr-2"></i>Reservas</h3>
+                <button onclick="cerrarModal('modal-admin-reservas')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Fecha</th>
+                                <th class="p-3 text-gray-500">Zona</th>
+                                <th class="p-3 text-gray-500">Contacto</th>
+                                <th class="p-3 text-gray-500">Estado</th>
+                                <th class="p-3 text-center text-gray-500">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-reservas-admin"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-config-zonas" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Parametrizar Zonas</h3>
+                <button onclick="cerrarModal('modal-admin-config-zonas')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Nombre</label>
+                            <input type="text" id="conf-zona-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Aforo</label>
+                            <input type="text" id="conf-zona-aforo" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Ícono</label>
+                            <select id="conf-zona-icono" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                <option value="fa-water-ladder">🏊‍♂️ Piscina</option>
+                                <option value="fa-fire-burner">🍖 BBQ / Asador</option>
+                                <option value="fa-dumbbell">🏋️‍♀️ Gimnasio</option>
+                                <option value="fa-tree">🌳 Parque</option>
+                                <option value="fa-people-roof">🏠 Salón</option>
+                                <option value="fa-futbol">⚽ Cancha</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="guardarZonaComun()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold p-3 rounded-lg transition shadow-md">Crear Zona</button>
+                </div>
+
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Ícono</th>
+                                <th class="p-3 text-gray-500">Nombre</th>
+                                <th class="p-3 text-gray-500">Aforo</th>
+                                <th class="p-3 text-center text-gray-500">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-config-zonas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-inmuebles" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden fade-in">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-house-flag mr-2"></i>Gestión de Inmuebles</h3>
+                <button onclick="cerrarModal('modal-admin-inmuebles')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="bg-white p-4 md:p-6 rounded-xl border shadow-sm mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">Oferta</label>
+                                    <select id="inm-tipo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
+                                        <option value="Se Arrienda" class="text-blue-600">Se Arrienda</option>
+                                        <option value="Se Vende" class="text-green-600">Se Vende</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">Precio</label>
+                                    <input type="number" id="inm-precio" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="text-xs font-bold text-gray-500">Título Corto</label>
+                                <input type="text" id="inm-titulo" maxlength="40" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <div><label class="text-xs font-bold text-gray-500">Hab.</label><input type="number" id="inm-hab" class="w-full p-2 border rounded mt-1"></div>
+                                <div><label class="text-xs font-bold text-gray-500">Baños</label><input type="number" id="inm-banos" class="w-full p-2 border rounded mt-1"></div>
+                                <div><label class="text-xs font-bold text-gray-500">Mts²</label><input type="number" id="inm-area" class="w-full p-2 border rounded mt-1"></div>
+                                <div><label class="text-xs font-bold text-gray-500">Parq.</label><input type="number" id="inm-parq" class="w-full p-2 border rounded mt-1"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">Contacto</label>
+                                    <input type="text" id="inm-nombre" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">WhatsApp</label>
+                                    <input type="number" id="inm-tel" class="w-full p-2.5 border rounded-lg mt-1 outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-gray-500">Descripción</label>
+                                <textarea id="inm-desc" rows="3" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
+                            </div>
+
+                            <div class="flex items-center gap-2 p-2 bg-yellow-50 border rounded-lg">
+                                <input type="checkbox" id="inm-destacado" class="w-5 h-5 accent-yellow-500 cursor-pointer shrink-0">
+                                <label for="inm-destacado" class="text-xs font-bold text-yellow-700 cursor-pointer">Marcar como Destacado (Inicio)</label>
+                            </div>
+
+                            <div class="p-2 bg-blue-50 border rounded-lg">
+                                <label class="text-xs font-bold text-blue-700 block mb-1"><i class="fas fa-images"></i> Subir Fotos (Max 6)</label>
+                                <input type="file" id="inm-fotos" accept="image/*" multiple class="w-full text-xs text-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="guardarInmueble()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-lg transition shadow-md">Publicar Inmueble</button>
+                </div>
+
+                <div class="bg-white rounded-xl border shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="p-3 text-gray-500">Inmueble</th>
+                                <th class="p-3 text-gray-500">Oferta</th>
+                                <th class="p-3 text-gray-500">Contacto</th>
+                                <th class="p-3 text-center text-gray-500">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inmuebles-admin"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-portada" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in max-h-[90vh] flex flex-col">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i>Configuración</h3>
+                <button onclick="cerrarModal('modal-admin-portada')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto">
+                <h4 class="font-bold text-blue-600 mb-3 border-b pb-1">Textos del Portal</h4>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500">Título</label>
+                    <input type="text" id="conf-hero-titulo" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
+                </div>
+                <div class="mb-6">
+                    <label class="text-xs font-bold text-gray-500">Descripción</label>
+                    <textarea id="conf-hero-desc" rows="2" class="w-full p-2.5 border rounded-lg mt-1 outline-none resize-none"></textarea>
+                </div>
+                <h4 class="font-bold text-orange-600 mb-3 border-b pb-1 mt-4"><i class="fas fa-users-cog mr-1"></i> Equipo Colaborador</h4>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500">Palabra clave para el campo 'Apto' (Quien la tenga, recibirá casos escalados)</label>
+                    <input type="text" id="conf-codigo-staff" class="w-full p-2.5 border border-orange-200 rounded-lg mt-1 outline-none font-bold text-orange-700 bg-orange-50" placeholder="Ej: STAFF, COLABORADOR, ADMIN...">
+                </div>
+
+                <h4 class="font-bold text-green-600 mb-3 border-b pb-1">Números del Directorio</h4>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500">WhatsApp Administración (Con Código)</label>
+                    <input type="number" id="conf-tel-admin" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tel. Portería</label>
+                        <input type="number" id="conf-tel-porteria" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500">Tel. Policía</label>
+                        <input type="number" id="conf-tel-policia" class="w-full p-2.5 border rounded-lg mt-1 outline-none font-bold">
+                    </div>
+                </div>
+
+                <button onclick="guardarPortada()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-jitsi" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in flex flex-col">
+            <div class="bg-indigo-700 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fas fa-video mr-2"></i>Salas Virtuales</h3>
+                <button onclick="cerrarModal('modal-admin-jitsi')" class="hover:text-red-400"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 md:p-6 bg-gray-50 flex flex-col gap-4" id="jitsi-opciones">
+                <div class="bg-white p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition cursor-pointer group" onclick="mostrarOpcionExpress()">
+                    <div class="flex items-center mb-2">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mr-3"><i class="fas fa-bolt"></i></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Sala Express (Inmediata)</h4>
+                            <span class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded tracking-widest border border-blue-200">Gratis</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500">Genera un link al instante. Ideal para consejos. No incluye grabación oficial.</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-yellow-300 shadow-sm hover:shadow-md transition cursor-pointer group" onclick="mostrarOpcionPremium()">
+                    <div class="flex items-center mb-2">
+                        <div class="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center text-xl mr-3"><i class="fas fa-star"></i></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Sala Premium (Grabada)</h4>
+                            <span class="text-[10px] font-bold text-yellow-700 uppercase bg-yellow-100 px-2 py-0.5 rounded tracking-widest border border-yellow-200">Reserva VIP</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500">Sala corporativa Zoom/Meet, sin límite de tiempo y con grabación para actas oficiales.</p>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-6 bg-blue-50 hidden" id="jitsi-form-express">
+                <button onclick="volverOpcionesJitsi()" class="text-xs font-bold text-blue-600 mb-3 hover:underline"><i class="fas fa-arrow-left mr-1"></i> Volver</button>
+                <div class="mb-4">
+                    <label class="text-xs font-bold text-gray-500 uppercase">Motivo de la reunión</label>
+                    <input type="text" id="jitsi-titulo-express" class="w-full p-3 border border-blue-200 rounded-lg mt-1 outline-none font-bold text-blue-900 focus:ring-2 focus:ring-blue-500" placeholder="Ej: Reunión de Consejo">
+                </div>
+                <button onclick="generarSalaExpress()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-lg transition shadow-md">Generar Link Express</button>
+            </div>
+
+            <div class="p-4 md:p-6 bg-yellow-50 hidden" id="jitsi-form-premium">
+                <button onclick="volverOpcionesJitsi()" class="text-xs font-bold text-yellow-700 mb-3 hover:underline"><i class="fas fa-arrow-left mr-1"></i> Volver</button>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Motivo (Ej: Asamblea General)</label>
+                        <input type="text" id="vip-motivo" class="w-full p-2.5 border border-yellow-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Fecha</label>
+                            <input type="date" id="vip-fecha" class="w-full p-2.5 border border-yellow-200 rounded-lg outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Hora</label>
+                            <input type="time" id="vip-hora" class="w-full p-2.5 border border-yellow-200 rounded-lg outline-none">
+                        </div>
+                    </div>
+                    <button onclick="solicitarSalaPremium()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold p-3 rounded-lg transition shadow-md">Enviar solicitud a Soporte</button>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-6 bg-white hidden text-center" id="jitsi-step-share">
+                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl mx-auto mb-3"><i class="fas fa-check"></i></div>
+                <h4 class="font-bold text-gray-800 mb-4 text-sm">Sala Express creada con éxito</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="compartirJitsiWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-bold p-3 rounded-lg transition flex items-center justify-center">
+                        <i class="fab fa-whatsapp text-lg mr-2"></i> WhatsApp
+                    </button>
+                    <button onclick="compartirJitsiCorreo()" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold p-3 rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-envelope text-lg mr-2"></i> Correo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("hWOGPxekMX4ceP4AZ"); 
+        })();
+    </script>
+    <script type="module" src="app-crm.js" defer></script>
 </body>
 </html>
