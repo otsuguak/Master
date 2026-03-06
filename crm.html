@@ -418,93 +418,129 @@
         </div>
     </div>
 
-    <div id="modal-crear" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
-            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold">Nuevo Reporte</h3>
-                <button onclick="cerrarModal('modal-crear')" class="hover:text-gray-200"><i class="fas fa-times"></i></button>
+    <div id="modal-crear" class="hidden fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-md p-4 transition-all duration-300">
+        <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] border border-white/60 w-full max-w-lg overflow-hidden fade-in transform transition-all">
+            
+            <div class="px-6 md:px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg shadow-inner">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h3 class="font-extrabold text-xl text-slate-800 tracking-tight">Radicar Solicitud</h3>
+                </div>
+                <button onclick="cerrarModal('modal-crear')" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="p-4 md:p-6 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div class="p-6 md:p-8 space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="text-xs font-bold text-gray-500">Tipo</label>
-                        <select id="pqr-tipo" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">Tipo de Solicitud</label>
+                        <select id="pqr-tipo" class="w-full p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none cursor-pointer">
                             <option>Petición</option><option>Queja</option><option>Reclamo</option><option>Felicitación</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500">Categoría</label>
-                        <select id="pqr-categoria" class="w-full p-2 border rounded mt-1 bg-gray-50">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">Categoría</label>
+                        <select id="pqr-categoria" class="w-full p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none cursor-pointer">
                             <option>Seguridad</option><option>Aseo</option><option>Convivencia</option><option>Mantenimiento</option><option>Administración</option>
                         </select>
                     </div>
                 </div>
+                
                 <div>
-                    <label class="text-xs font-bold text-gray-500">Descripción</label>
-                    <textarea id="pqr-desc" rows="3" class="w-full p-2 border rounded mt-1" placeholder="Detalle su caso..."></textarea>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">Descripción del Caso</label>
+                    <textarea id="pqr-desc" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none placeholder-slate-400 font-medium" placeholder="Describe los detalles de tu solicitud con la mayor claridad posible..."></textarea>
                 </div>
+                
                 <div>
-                    <label class="text-xs font-bold text-gray-500">Evidencia (Foto/PDF)</label>
-                    <input type="file" id="pqr-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block ml-1">Evidencia (Opcional)</label>
+                    <div class="relative flex items-center p-1.5 bg-slate-50 border border-slate-200 rounded-xl transition-all focus-within:ring-2 focus-within:ring-blue-500">
+                        <input type="file" id="pqr-file" class="w-full text-sm text-slate-500 file:cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white file:text-blue-600 file:shadow-sm hover:file:bg-blue-50 transition-all bg-transparent outline-none">
+                    </div>
                 </div>
-                <button id="btn-enviar" onclick="crearPQR()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">Enviar Caso</button>
+                
+                <div class="pt-2">
+                    <button id="btn-enviar" onclick="crearPQR()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl font-bold transition-all shadow-[0_10px_20px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_15px_25px_-10px_rgba(59,130,246,0.6)] transform hover:-translate-y-0.5 flex justify-center items-center group text-sm tracking-wide uppercase">
+                        Enviar Radicado <i class="fas fa-arrow-right ml-2 opacity-70 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="modal-detalle" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm p-2 md:p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[95vh] md:h-[85vh] flex flex-col overflow-hidden fade-in">
+    <div id="modal-detalle" class="hidden fixed inset-0 bg-slate-900/60 z-[60] flex items-center justify-center backdrop-blur-md p-2 md:p-4 transition-all duration-300">
+        <div class="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] border border-white/60 w-full max-w-3xl h-[95vh] md:h-[85vh] flex flex-col overflow-hidden fade-in">
             
-            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+            <div class="px-6 md:px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/50 shrink-0">
                 <div>
-                    <h3 class="font-bold text-lg" id="det-titulo">Caso #000</h3>
-                    <span id="det-estado" class="text-xs px-2 py-0.5 rounded bg-gray-600">Cargando...</span>
+                    <h3 class="font-extrabold text-2xl text-slate-800 tracking-tight flex items-center gap-3">
+                        <span id="det-titulo" class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Caso #000</span>
+                    </h3>
+                    <span id="det-estado" class="mt-2 inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">Cargando...</span>
                 </div>
-                <button onclick="cerrarModal('modal-detalle')" class="hover:text-gray-300"><i class="fas fa-times text-xl"></i></button>
+                <button onclick="cerrarModal('modal-detalle')" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center focus:outline-none">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
             </div>
 
-            <div class="bg-gray-50 p-4 md:p-6 flex-1 overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-b pb-4 mb-4">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Solicitante</p>
-                        <p class="font-bold text-gray-700" id="det-usuario">...</p>
+            <div class="p-6 md:p-8 flex-1 overflow-y-auto custom-scroll bg-slate-50/50">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Solicitante</p>
+                        <p class="font-bold text-slate-700 truncate" id="det-usuario">...</p>
                     </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">Categoría</p>
-                        <p class="font-bold text-gray-700" id="det-categoria">...</p>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Categoría</p>
+                        <p class="font-bold text-indigo-600" id="det-categoria">...</p>
                     </div>
                 </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-bold mb-2"><i class="fas fa-history mr-1"></i> Historial del Caso</p>
-                    <p class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed" id="det-descripcion">...</p>
-                    <a id="det-link" href="#" target="_blank" class="text-blue-600 text-sm font-bold hidden mt-4 hover:underline break-all inline-block bg-blue-50 px-3 py-2 rounded-lg border border-blue-100"><i class="fas fa-paperclip mr-1"></i> Ver evidencia adjunta original</a>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-4 flex items-center">
+                        <i class="fas fa-history mr-2 text-slate-300 text-sm"></i> Historial y Descripción
+                    </p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed font-medium" id="det-descripcion">...</p>
+                    </div>
+                    
+                    <a id="det-link" href="#" target="_blank" class="hidden mt-4 inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-700 transition bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl border border-blue-100">
+                        <i class="fas fa-paperclip mr-2"></i> Ver evidencia adjunta original
+                    </a>
                 </div>
             </div>
 
-            <div id="zona-gestion" class="p-4 bg-white border-t border-gray-200 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-                <h4 class="font-bold text-gray-700 mb-2 text-sm"><i class="fas fa-clipboard-check text-blue-500 mr-1"></i> Tu Respuesta</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+            <div id="zona-gestion" class="p-6 md:p-8 bg-white border-t border-slate-100 shrink-0 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)]">
+                <h4 class="font-bold text-slate-800 mb-4 text-sm flex items-center">
+                    <div class="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-2"><i class="fas fa-clipboard-check text-xs"></i></div>
+                    Panel de Resolución
+                </h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <select id="gestion-estado" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 outline-none focus:border-blue-500 font-medium" onchange="evaluarEstadoEscalamiento()">
-                            <option value="En Proceso">Dejar en Proceso</option>
-                            <option value="Escalado">Escalar Caso</option>
-                            <option value="Cerrado">Cerrar Caso</option>
+                        <select id="gestion-estado" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 appearance-none cursor-pointer" onchange="evaluarEstadoEscalamiento()">
+                            <option value="En Proceso">🟠 Dejar en Proceso</option>
+                            <option value="Escalado">🟡 Escalar Caso</option>
+                            <option value="Cerrado">🟢 Cerrar Caso (Finalizar)</option>
                         </select>
                     </div>
                     <div id="zona-escalar" class="hidden">
-                        <select id="gestion-asignado" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm bg-orange-50 outline-none focus:border-orange-500 truncate font-medium text-orange-800">
-                            <option value="">Cargando usuarios...</option>
+                        <select id="gestion-asignado" class="w-full p-3.5 border border-orange-200 rounded-xl text-sm bg-orange-50 outline-none focus:ring-2 focus:ring-orange-500 font-bold text-orange-700 appearance-none cursor-pointer truncate">
+                            <option value="">Cargando equipo de soporte...</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <textarea id="gestion-notas" rows="2" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500" placeholder="Escribe aquí tu gestión, diagnóstico o respuesta para el historial..."></textarea>
+                    <textarea id="gestion-notas" rows="2" class="w-full p-4 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400 resize-none" placeholder="Registra aquí tu gestión, diagnóstico o respuesta final para el residente..."></textarea>
                 </div>
-            </div>
-
-            <div class="p-3 bg-gray-100 border-t shrink-0 flex justify-end gap-3">
-                <button onclick="cerrarModal('modal-detalle')" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition text-sm font-medium">Cancelar</button>
-                <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-md">Guardar Gestión</button>
+                
+                <div class="mt-5 flex justify-end gap-3">
+                    <button onclick="cerrarModal('modal-detalle')" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition text-xs font-bold uppercase tracking-wider">Cancelar</button>
+                    <button id="btn-guardar-gestion" onclick="guardarGestionPQR()" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition text-xs font-bold uppercase tracking-wider shadow-[0_10px_20px_-10px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5">
+                        Guardar Gestión
+                    </button>
+                </div>
             </div>
         </div>
     </div>
