@@ -508,42 +508,46 @@ window.crearPQR = async () => {
     if (btn) btn.disabled = true;
 
     try {
-        let fileUrl = null;
+        let fileUrls = [];
 
-        // 1. Subir archivo a Supabase Storage (Si el usuario adjuntó algo)
+        // 1. MAGIA: Subir MÚLTIPLES archivos a Supabase Storage
         if (fileInput.files && fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            // Limpiamos el nombre del archivo para evitar errores en Supabase
-            const fileName = `pqr_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const fileName = `pqr_${Date.now()}_${i}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
 
-            // Usamos el bucket "inmuebles" que ya sabemos que existe y funciona bien
-            const { error: uploadError } = await supabase.storage.from('inmuebles').upload(fileName, file);
-            
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage.from('inmuebles').getPublicUrl(fileName);
-                fileUrl = publicUrl;
+                const { error: uploadError } = await supabase.storage.from('inmuebles').upload(fileName, file);
+                
+                if (!uploadError) {
+                    const { data: { publicUrl } } = supabase.storage.from('inmuebles').getPublicUrl(fileName);
+                    fileUrls.push(publicUrl);
+                }
             }
         }
 
-        // 2. Guardar el caso directamente en la tabla 'tickets' de Supabase
+        // Convertimos el Array de URLs en un texto separado por comas para guardarlo en 1 sola columna
+        const stringUrls = fileUrls.length > 0 ? fileUrls.join(',') : null;
+
+        // 2. Guardar el caso en Supabase
         const { error: dbError } = await supabase.from('tickets').insert([{
             usuario_id: usuarioActual.id,
             nombre_usuario: usuarioActual.nombre,
             tipo: tipo,
             categoria: categoria,
             descripcion: desc,
-            adjunto_url: fileUrl,
+            adjunto_url: stringUrls, // <-- Mandamos todas las urls unidas
             estado: 'Abierto'
         }]);
 
         if (dbError) throw dbError;
 
-        Swal.fire('¡Radicado Oficial Exitoso!', 'Tu solicitud ha sido guardada de forma segura.', 'success');
+        Swal.fire('¡Radicado Oficial Exitoso!', 'Tu solicitud y evidencias han sido guardadas.', 'success');
         cerrarModal('modal-crear');
         
-        // Limpiamos los campos para la próxima vez
+        // Limpiamos los campos
         document.getElementById('pqr-desc').value = '';
         fileInput.value = '';
+        document.getElementById('pqr-preview-archivos').innerHTML = '';
 
     } catch (error) {
         console.error("Fallo al radicar PQR:", error);
@@ -579,13 +583,31 @@ function renderizarModalDetalle(data) {
     document.getElementById('det-categoria').innerText = data.categoria;
     document.getElementById('det-descripcion').innerText = data.descripcion;
 
-    const link = document.getElementById('det-link');
-    if (data.adjunto_url) {
-        link.href = data.adjunto_url;
-        link.classList.remove('hidden');
-    } else {
-        link.classList.add('hidden');
+    // 👇 AQUÍ ESTÁ EL CAMBIO (PUNTO 3): Lógica para múltiples botones 👇
+    const linkContainer = document.getElementById('det-link-container');
+    if (linkContainer) {
+        linkContainer.innerHTML = ''; // Limpiamos botones anteriores
+        if (data.adjunto_url) {
+            // Separamos las URLs guardadas por las comas
+            const urls = data.adjunto_url.split(',');
+            
+            urls.forEach((url, index) => {
+                const esPdf = url.toLowerCase().includes('.pdf');
+                const icono = esPdf ? 'fa-file-pdf text-red-400' : 'fa-image text-indigo-400';
+                const label = esPdf ? `Documento ${index + 1}` : `Evidencia ${index + 1}`;
+                
+                linkContainer.innerHTML += `
+                    <a href="${url}" target="_blank" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-700 transition bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                        <i class="fas ${icono} mr-2 text-lg"></i> ${label}
+                    </a>
+                `;
+            });
+            linkContainer.classList.remove('hidden');
+        } else {
+            linkContainer.classList.add('hidden');
+        }
     }
+    // 👆 FIN DEL CAMBIO 👆
 
     // Buscamos las nuevas zonas de la interfaz de resolución
     const panelGestion = document.getElementById('zona-gestion');
@@ -610,7 +632,6 @@ function renderizarModalDetalle(data) {
         if (pieModal) pieModal.classList.add('hidden');
     }
 }
-
 // --- NUEVA LÓGICA DE RESOLUCIÓN Y ESCALAMIENTO ---
 
 // Mostrar/Ocultar lista de usuarios si se elige "Escalado"
@@ -735,6 +756,49 @@ function actualizarGrafica(stats) {
 window.abrirModalCrear = () => document.getElementById('modal-crear').classList.remove('hidden');
 window.cerrarModal = (id) => {
     document.getElementById(id).classList.add('hidden');
+};
+
+// --- DIBUJAR CAJITAS DE ARCHIVOS ---
+window.mostrarArchivosSeleccionados = (input) => {
+    const preview = document.getElementById('pqr-preview-archivos');
+    preview.innerHTML = ''; // Limpiar anteriores
+    
+    if (!input.files || input.files.length === 0) return;
+
+    // Validación: Máximo 3 archivos
+    if (input.files.length > 3) {
+        Swal.fire('Límite excedido', 'Solo puedes adjuntar un máximo de 3 archivos por reporte.', 'warning');
+        input.value = ''; 
+        return;
+    }
+
+    let html = '';
+    for(let i=0; i<input.files.length; i++){
+        const file = input.files[i];
+        
+        // Validación: Máximo 10MB (10 * 1024 * 1024 bytes)
+        if(file.size > 10485760) {
+            Swal.fire('Archivo muy pesado', `El archivo "${file.name}" supera los 10MB. Elige uno más ligero.`, 'error');
+            input.value = '';
+            preview.innerHTML = '';
+            return;
+        }
+
+        const mb = (file.size / 1024 / 1024).toFixed(2); // Convertir a MB
+        const icono = file.type.includes('pdf') ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500';
+        
+        // Armamos la tarjeta visual del archivo
+        html += `
+            <div class="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-xl fade-in">
+                <div class="flex items-center truncate pr-2">
+                    <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm mr-3 shrink-0"><i class="fas ${icono} text-lg"></i></div>
+                    <span class="text-xs font-bold text-slate-700 truncate">${file.name}</span>
+                </div>
+                <span class="text-[10px] font-black text-blue-600 bg-blue-100 px-2 py-1 rounded-md shrink-0">${mb} MB</span>
+            </div>
+        `;
+    }
+    preview.innerHTML = html;
 };
 
 window.exportarExcel = async () => {

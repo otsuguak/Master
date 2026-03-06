@@ -466,13 +466,18 @@
                     <textarea id="pqr-desc" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all resize-none placeholder-slate-400 font-medium" placeholder="Escribe aquí los detalles del caso..."></textarea>
                 </div>
                 
-                <div class="group">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Evidencia (Opcional)</label>
-                    <div class="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-blue-300 transition-all cursor-pointer">
-                        <i class="fas fa-cloud-upload-alt text-2xl text-slate-400 mb-2 group-hover:text-blue-500 transition-colors"></i>
-                        <span class="text-xs font-bold text-slate-500 mb-2">Haz clic para adjuntar foto o PDF</span>
-                        <input type="file" id="pqr-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+               <div class="group">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block flex justify-between">
+                        <span>Evidencias (Opcional)</span>
+                        <span class="text-blue-500">Max 3 archivos (10MB c/u)</span>
+                    </label>
+                    <div class="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-blue-300 transition-all cursor-pointer group-focus-within:border-blue-400">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-slate-300 mb-2 group-hover:text-blue-500 transition-colors transform group-hover:-translate-y-1"></i>
+                        <span class="text-xs font-bold text-slate-500 mb-1">Haz clic para buscar fotos o PDFs</span>
+                        <span class="text-[10px] text-slate-400">Formatos: JPG, PNG, WEBP, PDF</span>
+                        <input type="file" id="pqr-file" multiple accept="image/*,.pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="mostrarArchivosSeleccionados(this)">
                     </div>
+                    <div id="pqr-preview-archivos" class="flex flex-col gap-2 mt-3 empty:hidden"></div>
                 </div>
                 
                 <div class="pt-2">
@@ -520,7 +525,7 @@
                     <div class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
                         <p class="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed font-medium" id="det-descripcion">...</p>
                     </div>
-                    <a id="det-link" href="#" target="_blank" class="hidden mt-4 inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-700 transition bg-indigo-50 hover:bg-indigo-100 px-5 py-3 rounded-xl border border-indigo-100">
+                    <div id="det-link-container" class="hidden mt-4 flex flex-wrap gap-3"></div>
                         <i class="fas fa-paperclip mr-2"></i> Ver evidencia adjunta
                     </a>
                 </div>
