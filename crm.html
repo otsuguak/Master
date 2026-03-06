@@ -36,6 +36,43 @@
 
         .btn-master { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); transition: all 0.4s ease; background-size: 200% auto; border: 1px solid rgba(255,255,255,0.1); }
         .btn-master:hover { background-position: right center; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transform: translateY(-2px); }
+
+        /* ==========================================
+           MODO MASTER: TITANIUM WHITE (BENTO UI)
+           ========================================== */
+        .bento-card { 
+            background: #ffffff; 
+            border-radius: 1.5rem; 
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.03); 
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.06);
+        }
+        
+        .sidebar-master {
+            background: #0f172a; /* Slate 900 profundo */
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 70%);
+        }
+        
+        .btn-sidebar-master {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-sidebar-master:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            box-shadow: inset 2px 0 0 0 #3b82f6;
+        }
+        
+        .premium-gradient-text {
+            background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 
@@ -163,158 +200,185 @@
         </div>
     </div>
 
-    <div id="dashboard" class="hidden h-[100dvh] bg-gray-100 flex overflow-hidden w-full relative">
+   <div id="dashboard" class="hidden h-[100dvh] bg-slate-50 flex overflow-hidden w-full relative selection:bg-blue-200 selection:text-blue-900">
         
-        <div id="mobile-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-900/80 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+        <div id="mobile-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
-        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-50 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-10">
+        <aside id="sidebar" class="w-[280px] sidebar-master text-slate-300 flex flex-col shadow-2xl z-50 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out h-[100dvh] md:h-full overflow-y-auto no-scrollbar border-r border-slate-800">
             
             <div class="md:hidden absolute top-4 right-4 z-50">
-                <button onclick="toggleMenu()" class="text-gray-400 hover:text-white bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center shadow-lg"><i class="fas fa-times"></i></button>
+                <button onclick="toggleMenu()" class="text-slate-400 hover:text-white bg-white/5 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
             </div>
             
-            <div class="p-6 text-center border-b border-slate-800 shrink-0">
-                <h1 class="text-2xl font-bold text-blue-400"><i class="fas fa-shield-alt mr-2"></i>CRM Master</h1>
-                <p class="text-xs text-gray-400 mt-1">Gestión Inteligente</p>
+            <div class="p-8 text-left shrink-0">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4">
+                    <i class="fas fa-cube text-white text-lg"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight">CRM <span class="text-blue-400">Master</span></h1>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Workspace Inteligente</p>
             </div>
             
-            <nav class="flex-1 p-4 space-y-2 shrink-0">
-                <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Menú</div>
+            <nav class="flex-1 px-4 space-y-1.5 shrink-0">
+                <div class="text-[10px] uppercase text-slate-500 font-bold mb-3 ml-4 tracking-widest">Menú Principal</div>
                 
-                <button onclick="cargarDashboard()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                    <i class="fas fa-chart-pie w-6"></i> Panel Principal
+                <button onclick="cargarDashboard()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300">
+                    <i class="fas fa-layer-group w-6 text-blue-400/80"></i> Panel Principal
                 </button>
 
-                <button id="btn-nuevo-pqr" onclick="abrirModalCrear()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
-                    <i class="fas fa-plus-circle w-6 text-green-400"></i> Nuevo Caso
+                <button id="btn-nuevo-pqr" onclick="abrirModalCrear()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300 hidden">
+                    <i class="fas fa-plus-circle w-6 text-emerald-400/80"></i> Nuevo Caso
                 </button>
 
-                <button id="btn-exportar" onclick="exportarExcel()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
-                    <i class="fas fa-file-excel w-6 text-green-400"></i> Exportar Datos
+                <button id="btn-exportar" onclick="exportarExcel()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300 hidden">
+                    <i class="fas fa-file-export w-6 text-emerald-400/80"></i> Exportar Datos
                 </button>
                 
                 <div id="btn-config-index" class="hidden flex-col w-full">
-                    <button onclick="document.getElementById('submenu-parametrizar').classList.toggle('hidden')" class="w-full flex justify-between items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                        <div class="flex items-center"><i class="fas fa-cogs w-6 text-purple-400"></i> Parametrizar Inicio</div>
+                    <button onclick="document.getElementById('submenu-parametrizar').classList.toggle('hidden')" class="btn-sidebar-master w-full flex justify-between items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300">
+                        <div class="flex items-center"><i class="fas fa-sliders-h w-6 text-purple-400/80"></i> Parametrizar</div>
                         <i class="fas fa-chevron-down text-xs text-slate-500"></i>
                     </button>
-                    <div id="submenu-parametrizar" class="hidden flex-col bg-slate-900/50 rounded-lg mt-1 overflow-hidden border border-slate-700/50">
-                        <button onclick="abrirModalConfigZonas()" class="w-full flex items-center p-3 pl-10 hover:bg-slate-800 transition text-left text-sm text-gray-300">
-                            <i class="fas fa-tree-city w-5 text-purple-400"></i> Zonas Comunes
+                    <div id="submenu-parametrizar" class="hidden flex-col bg-slate-800/30 rounded-xl mt-1 overflow-hidden border border-white/5 py-2">
+                        <button onclick="abrirModalConfigZonas()" class="w-full flex items-center py-2.5 pl-11 hover:text-white transition text-left text-xs text-slate-400 font-medium">
+                            <i class="fas fa-tree-city w-5 text-purple-400/60"></i> Zonas Comunes
                         </button>
-                        <button onclick="abrirModalPortada()" class="w-full flex items-center p-3 pl-10 hover:bg-slate-800 transition text-left text-sm text-gray-300">
-                            <i class="fas fa-image w-5 text-blue-400"></i> Portada y Banner
+                        <button onclick="abrirModalPortada()" class="w-full flex items-center py-2.5 pl-11 hover:text-white transition text-left text-xs text-slate-400 font-medium">
+                            <i class="fas fa-window-maximize w-5 text-blue-400/60"></i> Portada y Banner
                         </button>
                     </div>
                 </div>
                 
-                <button id="btn-directorio" onclick="abrirDirectorio()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left hidden">
-                    <i class="fas fa-address-book w-6 text-yellow-400"></i> Directorio
+                <button id="btn-directorio" onclick="abrirDirectorio()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300 hidden">
+                    <i class="fas fa-address-book w-6 text-yellow-400/80"></i> Directorio
                 </button>
 
-                <div id="menu-admin-extra" class="hidden flex-col space-y-2 mt-4 pt-4 border-t border-slate-800">
-                    <div class="text-xs uppercase text-slate-500 font-bold mb-2 ml-2">Portal Web</div>
+                <div id="menu-admin-extra" class="hidden flex-col space-y-1.5 mt-6 pt-6 border-t border-white/5">
+                    <div class="text-[10px] uppercase text-slate-500 font-bold mb-3 ml-4 tracking-widest">Portal Web & Apps</div>
                     
-                    <button onclick="abrirModalNoticias()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                        <i class="fas fa-bullhorn w-6 text-blue-400"></i> Cartelera Digital
+                    <button onclick="abrirModalNoticias()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300">
+                        <i class="fas fa-broadcast-tower w-6 text-blue-400/80"></i> Cartelera Digital
                     </button>
 
-                    <button onclick="abrirModalJitsi()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left mt-2 border border-indigo-500/30 bg-indigo-500/10">
-                        <i class="fas fa-video w-6 text-indigo-400 animate-pulse"></i> Crear Sala Virtual
+                    <button onclick="abrirModalJitsi()" class="w-full flex items-center p-3.5 rounded-xl transition text-left text-sm font-semibold mt-2 border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 group">
+                        <i class="fas fa-video w-6 text-indigo-400 group-hover:animate-pulse"></i> Salas Virtuales
                     </button>
                     
-                    <button onclick="abrirModalReservas()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                        <i class="fas fa-calendar-check w-6 text-yellow-400"></i> Aprobar Reservas
+                    <button onclick="abrirModalReservas()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300">
+                        <i class="fas fa-calendar-alt w-6 text-orange-400/80"></i> Control Reservas
                     </button>
 
-                    <button onclick="abrirModalInmuebles()" class="w-full flex items-center p-3 rounded-lg hover:bg-slate-800 transition text-left">
-                        <i class="fas fa-house-flag w-6 text-green-400"></i> Inmuebles
+                    <button onclick="abrirModalInmuebles()" class="btn-sidebar-master w-full flex items-center p-3.5 rounded-xl text-left text-sm font-semibold text-slate-300">
+                        <i class="fas fa-building w-6 text-green-400/80"></i> Mercado Inmobiliario
                     </button>
                 </div>    
             </nav>
 
-            <div class="p-4 border-t border-slate-800 shrink-0 mt-auto">
-                <div class="flex items-center mb-4">
-                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">U</div>
+            <div class="p-5 border-t border-white/5 shrink-0 mt-auto bg-slate-900/50">
+                <div class="flex items-center mb-4 bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center font-bold text-white text-sm shadow-inner">U</div>
                     <div class="ml-3 truncate">
-                        <p id="dash-nombre" class="text-sm font-bold truncate">Usuario</p>
-                        <p id="dash-rol" class="text-xs text-gray-400 capitalize">Rol</p>
+                        <p id="dash-nombre" class="text-sm font-bold text-white truncate">Usuario</p>
+                        <p id="dash-rol" class="text-[10px] text-blue-300 uppercase tracking-widest font-bold">Rol</p>
                     </div>
                 </div>
-                <button onclick="cerrarSesion()" class="w-full bg-red-600/20 text-red-400 p-2 rounded hover:bg-red-600/40 text-sm transition">
+                <button onclick="cerrarSesion()" class="w-full flex items-center justify-center text-slate-400 hover:text-red-400 p-2 text-xs font-bold transition uppercase tracking-wider">
                     <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
                 </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md shrink-0 z-30">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f4f7f9] relative">
+            
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+            <header class="md:hidden bg-white/80 backdrop-blur-md p-4 flex justify-between items-center shadow-sm shrink-0 z-30 border-b border-slate-200">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-shield-alt text-blue-400 text-xl"></i>
-                    <h1 class="text-xl font-bold tracking-tight">CRM Master</h1>
+                    <i class="fas fa-cube text-blue-600 text-xl"></i>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-800">CRM Master</h1>
                 </div>
-                <button onclick="toggleMenu()" class="text-gray-300 hover:text-white focus:outline-none">
-                    <i class="fas fa-bars text-2xl"></i>
+                <button onclick="toggleMenu()" class="text-slate-600 hover:text-blue-600 focus:outline-none bg-slate-100 p-2 rounded-lg">
+                    <i class="fas fa-bars text-xl"></i>
                 </button>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
-                <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-2">
-                    <h2 class="text-xl md:text-2xl font-bold text-gray-800">Resumen de Actividad</h2>
-                    <div class="flex items-center space-x-2">
-                       <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                       <span class="text-sm text-gray-500">Sistema en línea</span>
+            <main class="flex-1 overflow-y-auto p-4 md:p-10 relative custom-scroll z-10">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Análisis Operativo</h2>
+                        <p class="text-slate-500 text-sm mt-1 font-medium">Monitoreo y gestión en tiempo real.</p>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-full shadow-sm border border-slate-200">
+                       <span class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                       </span>
+                       <span class="text-xs text-slate-600 font-bold uppercase tracking-wider">Sistema en línea</span>
                     </div>
                 </header>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase">Total Casos</p>
-                            <p id="kpi-total" class="text-3xl font-extrabold text-gray-800 mt-1">0</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8 mb-10">
+                    <div class="bento-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 transform group-hover:scale-110 transition-transform duration-500">
+                            <i class="fas fa-inbox text-8xl text-blue-600"></i>
                         </div>
-                        <div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-folder-open text-xl"></i></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 shadow-inner border border-blue-100"><i class="fas fa-folder-open"></i></div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Volumen Total</p>
+                            <p id="kpi-total" class="text-4xl font-black text-slate-800 tracking-tight">0</p>
+                        </div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase">Pendientes</p>
-                            <p id="kpi-pendientes" class="text-3xl font-extrabold text-orange-500 mt-1">0</p>
+                    
+                    <div class="bento-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 transform group-hover:scale-110 transition-transform duration-500">
+                            <i class="fas fa-clock text-8xl text-orange-600"></i>
                         </div>
-                        <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-clock text-xl"></i></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl mb-4 shadow-inner border border-orange-100"><i class="fas fa-bolt"></i></div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Requieren Atención</p>
+                            <p id="kpi-pendientes" class="text-4xl font-black text-slate-800 tracking-tight">0</p>
+                        </div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase">Resueltos</p>
-                            <p id="kpi-resueltos" class="text-3xl font-extrabold text-green-500 mt-1">0</p>
+
+                    <div class="bento-card p-6 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 transform group-hover:scale-110 transition-transform duration-500">
+                            <i class="fas fa-check-double text-8xl text-emerald-600"></i>
                         </div>
-                        <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-check-circle text-xl"></i></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 shadow-inner border border-emerald-100"><i class="fas fa-check-circle"></i></div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Casos Cerrados</p>
+                            <p id="kpi-resueltos" class="text-4xl font-black text-slate-800 tracking-tight">0</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                    <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                            <h3 class="font-bold text-lg text-gray-700">Casos Recientes</h3>
+                    
+                    <div class="lg:col-span-2 bento-card flex flex-col overflow-hidden">
+                        <div class="p-6 md:p-8 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white/50 backdrop-blur-sm">
+                            <h3 class="font-bold text-xl text-slate-800 tracking-tight"><i class="fas fa-list-ul mr-2 text-blue-500"></i> Registro de Casos</h3>
                         </div>
 
-                        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            <select id="filtro-estado" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
-                                <option value="">Todos los Estados</option>
-                                <option value="abierto">Abierto</option>
-                                <option value="en proceso">En Proceso</option>
-                                <option value="escalado">Escalado</option>
-                                <option value="cerrado">Cerrado</option>
+                        <div class="p-4 md:px-8 bg-slate-50/50 border-b border-slate-100 grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <select id="filtro-estado" onchange="aplicarFiltros()" class="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 shadow-sm outline-none font-medium cursor-pointer appearance-none">
+                                <option value="">Estado: Todos</option>
+                                <option value="abierto">🔴 Abiertos</option>
+                                <option value="en proceso">🟠 En Proceso</option>
+                                <option value="escalado">🟡 Escalados</option>
+                                <option value="cerrado">🟢 Cerrados</option>
                             </select>
-                            <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar usuario..." class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
-                            <select id="filtro-tipo" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
-                                <option value="">Todos los Tipos</option>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400"><i class="fas fa-search"></i></div>
+                                <input type="text" id="filtro-usuario" onkeyup="aplicarFiltros()" placeholder="Buscar usuario..." class="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 shadow-sm outline-none font-medium placeholder-slate-400">
+                            </div>
+                            <select id="filtro-tipo" onchange="aplicarFiltros()" class="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 block w-full p-2.5 shadow-sm outline-none font-medium cursor-pointer appearance-none">
+                                <option value="">Tipo: Todos</option>
                                 <option value="petición">Petición</option>
                                 <option value="queja">Queja</option>
                                 <option value="reclamo">Reclamo</option>
                                 <option value="felicitación">Felicitación</option>
                             </select>
-                            <select id="filtro-categoria" onchange="aplicarFiltros()" class="p-2 border rounded text-sm outline-none focus:border-blue-500 w-full">
-                                <option value="">Todas Categorías</option>
+                            <select id="filtro-categoria" onchange="aplicarFiltros()" class="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 block w-full p-2.5 shadow-sm outline-none font-medium cursor-pointer appearance-none">
+                                <option value="">Categoría: Todas</option>
                                 <option value="seguridad">Seguridad</option>
                                 <option value="aseo">Aseo</option>
                                 <option value="convivencia">Convivencia</option>
@@ -323,28 +387,29 @@
                             </select>
                         </div>
 
-                        <div class="overflow-x-auto rounded-lg border border-gray-100">
+                        <div class="flex-1 overflow-x-auto custom-scroll p-2">
                             <table class="w-full text-left text-sm whitespace-nowrap">
-                                <thead class="bg-gray-50 border-b">
+                                <thead>
                                     <tr>
-                                        <th class="p-3 text-gray-500 font-semibold">ID Caso</th>
-                                        <th class="p-3 text-gray-500 font-semibold">Estado</th>
-                                        <th class="p-3 text-gray-500 font-semibold">Fecha</th>
-                                        <th class="p-3 text-gray-500 font-semibold">Usuario</th>
-                                        <th class="p-3 text-gray-500 font-semibold">Tipo</th>
-                                        <th class="p-3 text-gray-500 font-semibold">Categoría</th>
-                                        <th class="p-3 text-gray-500 font-semibold"></th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Ticket ID</th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Estado</th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Fecha</th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Usuario</th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Tipo</th>
+                                        <th class="p-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">Categoría</th>
+                                        <th class="p-4 border-b border-slate-100"></th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-body">
+                                <tbody id="tabla-body" class="divide-y divide-slate-100/50">
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center">
-                        <h3 class="font-bold text-lg mb-4 text-gray-700 w-full text-left">Distribución</h3>
-                        <div class="w-full h-48 md:h-64 relative">
+                    <div class="bento-card p-6 md:p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                        <h3 class="font-bold text-xl mb-6 text-slate-800 tracking-tight w-full text-left"><i class="fas fa-chart-pie mr-2 text-indigo-500"></i> Distribución</h3>
+                        <div class="w-full h-56 md:h-64 relative flex-1">
                             <canvas id="myChart"></canvas>
                         </div>
                     </div>
