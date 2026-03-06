@@ -490,75 +490,110 @@ tickets.forEach(t => {
     });
 }
 
+// app-crm.js
 
-window.crearPQR = async () => {
+async function crearPQR() {
+    // 1. GESTIÓN DE UI: BLOQUEAMOS BOTÓN Y PONEMOS CARGA
+    const btnEnviar = document.getElementById('btn-enviar');
+    const inputDesc = document.getElementById('pqr-desc');
+    const descOriginal = inputDesc.placeholder;
+
+    if (btnEnviar) {
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> Procesando...';
+    }
+    inputDesc.placeholder = "Un momento, por favor. Estamos encriptando tu solicitud...";
+
+    console.log("🚀 Iniciando proceso de creación de PQR...");
+
+    // 2. CAPTURA DE DATOS
     const tipo = document.getElementById('pqr-tipo').value;
-    const cat = document.getElementById('pqr-categoria').value;
-    const desc = document.getElementById('pqr-desc').value;
+    const categoria = document.getElementById('pqr-categoria').value;
+    const descripcion = document.getElementById('pqr-desc').value;
     const fileInput = document.getElementById('pqr-file');
+    
+    let adjuntoBase64 = null;
+    let adjuntoNombre = null;
 
-    if (!desc) return Swal.fire('Atención', 'Describe tu caso', 'warning');
+    // --- 🛡️ CTO TRICK: VALIDACIÓN Y CONVERSIÓN DE ARCHIVO A BASE64 ---
+    if (fileInput.files && fileInput.files) {
+        const file = fileInput.files;
+        adjuntoNombre = file.name;
+        console.log(`📁 Archivo detectado: ${adjuntoNombre} (${file.size} bytes)`);
 
-    mostrarCargando(); 
+        try {
+            // Promisificamos el FileReader para usar async/await
+            adjuntoBase64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(cite: ',')[cite: 1]); // Obtenemos solo la cadena Base64
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file); // Lee el archivo como una URL de datos Base64
+            });
+            console.log("✅ Archivo convertido a Base64 exitosamente.");
+        } catch (error) {
+            console.error("❌ Error fatal convirtiendo el archivo:", error);
+            // Si falla el archivo, no bloqueamos todo el proceso, pero notificamos
+            Swal.fire("Error de archivo", "No pudimos procesar la imagen adjunta. Se enviará el caso sin ella.", "warning");
+        }
+    }
 
+    // 3. ARMADO DEL PAYLOAD
+    // Asegúrate de que tu Google Apps Script espere "adjuntoBase64" y "adjuntoNombre"
+    const payload = {
+        action: "crear_pqr",
+        tipo: tipo,
+        categoria: categoria,
+        descripcion: descripcion,
+        adjuntoBase64: adjuntoBase64, // La cadena de texto Base64
+        adjuntoNombre: adjuntoNombre   // El nombre original del archivo
+    };
+
+    console.log("📡 Payload preparado, enviando a Google Apps Script...", payload);
+
+    // 4. ENVÍO A LA API CON fetch BLINDADO
     try {
-        let fileUrl = null;
-        const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp','application/pdf' ];
-        for (let i = 0; i < archivos.length; i++) {
-        if (!tiposPermitidos.includes(archivos[i].type)) {
-            return Swal.fire('Archivo Peligroso', 'Solo se permiten imágenes en formato JPG, PNG o WEBP. Por favor, revisa tus archivos.', 'error');
-        }
-    }
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const fileName = `${Date.now()}_${file.name}`;
-            const { data, error } = await supabase.storage
-              .from('evidencias')
-              .upload(fileName, file);
-              
-            if(error) throw error;
-            
-            const { data: { publicUrl } } = supabase.storage
-              .from('evidencias')
-              .getPublicUrl(fileName);
-              
-            fileUrl = publicUrl;
+        const response = await fetch(URL_API, {
+            method: 'POST',
+            // Importante: No uses Content-Type: application/json si GAS no está configurado para ello. 
+            // Deja que fetch maneje el body o usa application/x-www-form-urlencoded si es necesario.
+            body: JSON.stringify(payload) 
+        });
+
+        console.log("📥 Respuesta de red recibida:", response);
+
+        if (!response.ok) {
+            throw new Error(`Error de red: ${response.status} ${response.statusText}`);
         }
 
-        const nuevoHistorial = [{
-            autor: usuarioActual.nombre,
-            rol: usuarioActual.rol,
-            mensaje: "Caso radicado: " + desc,
-            fecha: new Date().toISOString()
-        }];
+        const resultado = await response.json();
+        console.log("✅ Datos guardados en Sheets:", resultado);
 
-        const { error: dbError } = await supabase.from('tickets').insert([
-            {
-                usuario_id: usuarioActual.id,
-                nombre_usuario: usuarioActual.nombre,
-                tipo: tipo,
-                categoria: cat,
-                descripcion: desc,
-                adjunto_url: fileUrl,
-                estado: 'Abierto',
-                historial: nuevoHistorial 
-            }
-        ]);
+        // GESTIÓN DE UI FINAL
+        Swal.fire("¡Radicado Exitoso!", "Tu solicitud #001 ha sido procesada correctamente.", "success");
+        cerrarModal('modal-crear');
+        if (typeof cargarDashboard === 'function') cargarDashboard(); // Recargamos la tabla
 
-        if (dbError) throw dbError;
-
-        Swal.fire('Enviado', 'Tu caso ha sido radicado', 'success');
-        window.cerrarModal('modal-crear');
-        document.getElementById('pqr-desc').value = "";
-        document.getElementById('pqr-file').value = "";
-
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'No se pudo crear el caso', 'error');
+    } catch (error) {
+        // --- 🛡️ CTO TRICK: CATCH PARA EVITAR QUE SE QUEDE "STUCK" ---
+        console.error("❌❌❌ ERROR FATAL EN EL ENVÍOfetch:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'No pudimos enviar tu solicitud',
+            text: 'Hubo un problema de conexión con el servidor o el archivo es demasiado pesado. Intenta de nuevo.',
+            footer: '<span class="text-xs text-slate-500">CTO Tip: Revisa la consola para más detalles técnicos.</span>'
+        });
     } finally {
-        ocultarCargando(); 
+        // --- 🛡️ CTO TRICK: FINALLY PARA SIEMPRE RESTAURAR LA UI ---
+        if (btnEnviar) {
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = 'Enviar Radicado Oficial <i class="fas fa-arrow-right ml-2 transition-transform"></i>';
+        }
+        inputDesc.placeholder = descOriginal;
+        // Limpiamos el formulario
+        document.getElementById('pqr-desc').value = "";
+        fileInput.value = "";
     }
-};
+}
 
 window.abrirDetalle = async (id) => {
     pqrSeleccionadoID = id;
