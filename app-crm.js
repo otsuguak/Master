@@ -121,6 +121,7 @@ window.mostrarRegistro = () => {
     document.getElementById('register-section').classList.remove('hidden');
 };
 window.mostrarLogin = () => mostrarLogin();
+window.cargarDashboard = () => mostrarDashboard();
 
 // ==========================================
 //  SISTEMA DE AUTENTICACIÓN DIRECTO (SIN EVENTOS TÓXICOS)
@@ -492,108 +493,67 @@ tickets.forEach(t => {
 
 // app-crm.js
 
-async function crearPQR() {
-    // 1. GESTIÓN DE UI: BLOQUEAMOS BOTÓN Y PONEMOS CARGA
-    const btnEnviar = document.getElementById('btn-enviar');
-    const inputDesc = document.getElementById('pqr-desc');
-    const descOriginal = inputDesc.placeholder;
-
-    if (btnEnviar) {
-        btnEnviar.disabled = true;
-        btnEnviar.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> Procesando...';
-    }
-    inputDesc.placeholder = "Un momento, por favor. Estamos encriptando tu solicitud...";
-
-    console.log("🚀 Iniciando proceso de creación de PQR...");
-
-    // 2. CAPTURA DE DATOS
+window.crearPQR = async () => {
     const tipo = document.getElementById('pqr-tipo').value;
     const categoria = document.getElementById('pqr-categoria').value;
-    const descripcion = document.getElementById('pqr-desc').value;
+    const desc = document.getElementById('pqr-desc').value.trim();
     const fileInput = document.getElementById('pqr-file');
-    
-    let adjuntoBase64 = null;
-    let adjuntoNombre = null;
 
-    // --- 🛡️ CTO TRICK: VALIDACIÓN Y CONVERSIÓN DE ARCHIVO A BASE64 ---
-    if (fileInput.files && fileInput.files) {
-        const file = fileInput.files;
-        adjuntoNombre = file.name;
-        console.log(`📁 Archivo detectado: ${adjuntoNombre} (${file.size} bytes)`);
-
-        try {
-            // Promisificamos el FileReader para usar async/await
-            adjuntoBase64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(cite: ',')[cite: 1]); // Obtenemos solo la cadena Base64
-                reader.onerror = (error) => reject(error);
-                reader.readAsDataURL(file); // Lee el archivo como una URL de datos Base64
-            });
-            console.log("✅ Archivo convertido a Base64 exitosamente.");
-        } catch (error) {
-            console.error("❌ Error fatal convirtiendo el archivo:", error);
-            // Si falla el archivo, no bloqueamos todo el proceso, pero notificamos
-            Swal.fire("Error de archivo", "No pudimos procesar la imagen adjunta. Se enviará el caso sin ella.", "warning");
-        }
+    if (!desc) {
+        return Swal.fire('Faltan datos', 'Por favor escribe los detalles de tu solicitud.', 'warning');
     }
 
-    // 3. ARMADO DEL PAYLOAD
-    // Asegúrate de que tu Google Apps Script espere "adjuntoBase64" y "adjuntoNombre"
-    const payload = {
-        action: "crear_pqr",
-        tipo: tipo,
-        categoria: categoria,
-        descripcion: descripcion,
-        adjuntoBase64: adjuntoBase64, // La cadena de texto Base64
-        adjuntoNombre: adjuntoNombre   // El nombre original del archivo
-    };
+    mostrarCargando();
+    const btn = document.getElementById('btn-enviar');
+    if (btn) btn.disabled = true;
 
-    console.log("📡 Payload preparado, enviando a Google Apps Script...", payload);
-
-    // 4. ENVÍO A LA API CON fetch BLINDADO
     try {
-        const response = await fetch(URL_API, {
-            method: 'POST',
-            // Importante: No uses Content-Type: application/json si GAS no está configurado para ello. 
-            // Deja que fetch maneje el body o usa application/x-www-form-urlencoded si es necesario.
-            body: JSON.stringify(payload) 
-        });
+        let fileUrl = null;
 
-        console.log("📥 Respuesta de red recibida:", response);
+        // 1. Subir archivo a Supabase Storage (Si el usuario adjuntó algo)
+        if (fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            // Limpiamos el nombre del archivo para evitar errores en Supabase
+            const fileName = `pqr_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
 
-        if (!response.ok) {
-            throw new Error(`Error de red: ${response.status} ${response.statusText}`);
+            // Usamos el bucket "inmuebles" que ya sabemos que existe y funciona bien
+            const { error: uploadError } = await supabase.storage.from('inmuebles').upload(fileName, file);
+            
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage.from('inmuebles').getPublicUrl(fileName);
+                fileUrl = publicUrl;
+            }
         }
 
-        const resultado = await response.json();
-        console.log("✅ Datos guardados en Sheets:", resultado);
+        // 2. Guardar el caso directamente en la tabla 'tickets' de Supabase
+        const { error: dbError } = await supabase.from('tickets').insert([{
+            usuario_id: usuarioActual.id,
+            nombre_usuario: usuarioActual.nombre,
+            tipo: tipo,
+            categoria: categoria,
+            descripcion: desc,
+            adjunto_url: fileUrl,
+            estado: 'Abierto'
+        }]);
 
-        // GESTIÓN DE UI FINAL
-        Swal.fire("¡Radicado Exitoso!", "Tu solicitud #001 ha sido procesada correctamente.", "success");
+        if (dbError) throw dbError;
+
+        Swal.fire('¡Radicado Oficial Exitoso!', 'Tu solicitud ha sido guardada de forma segura.', 'success');
         cerrarModal('modal-crear');
-        if (typeof cargarDashboard === 'function') cargarDashboard(); // Recargamos la tabla
+        
+        // Limpiamos los campos para la próxima vez
+        document.getElementById('pqr-desc').value = '';
+        fileInput.value = '';
 
     } catch (error) {
-        // --- 🛡️ CTO TRICK: CATCH PARA EVITAR QUE SE QUEDE "STUCK" ---
-        console.error("❌❌❌ ERROR FATAL EN EL ENVÍOfetch:", error);
-        Swal.fire({
-            icon: 'error',
-            title: 'No pudimos enviar tu solicitud',
-            text: 'Hubo un problema de conexión con el servidor o el archivo es demasiado pesado. Intenta de nuevo.',
-            footer: '<span class="text-xs text-slate-500">CTO Tip: Revisa la consola para más detalles técnicos.</span>'
-        });
+        console.error("Fallo al radicar PQR:", error);
+        Swal.fire('Error', 'No pudimos enviar tu solicitud. Verifica tu conexión.', 'error');
     } finally {
-        // --- 🛡️ CTO TRICK: FINALLY PARA SIEMPRE RESTAURAR LA UI ---
-        if (btnEnviar) {
-            btnEnviar.disabled = false;
-            btnEnviar.innerHTML = 'Enviar Radicado Oficial <i class="fas fa-arrow-right ml-2 transition-transform"></i>';
-        }
-        inputDesc.placeholder = descOriginal;
-        // Limpiamos el formulario
-        document.getElementById('pqr-desc').value = "";
-        fileInput.value = "";
+        ocultarCargando();
+        if (btn) btn.disabled = false;
     }
-}
+};
+
 
 window.abrirDetalle = async (id) => {
     pqrSeleccionadoID = id;
