@@ -1,9 +1,6 @@
 // --- IMPORTACIÓN DE SUPABASE ---
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-const supabaseUrl = 'https://rqjfaztnaktizrgllhna.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxamZhenRuYWt0aXpyZ2xsaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzk1NjksImV4cCI6MjA4NzcxNTU2OX0.cb6LSWq5YZ7BKRdBx2VoeD-m1gUonfpU_MJemaTSB3U';
-
 // 1. ALMACENAMIENTO SEGURO
 const RAM = {};
 const almacenamientoSeguro = {
@@ -1680,3 +1677,50 @@ window.compartirJitsiCorreo = () => {
     const cuerpo = encodeURIComponent(`Para entrar a la reunión haz clic aquí:\n\n${linkJitsiGlobal}`);
     window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
 };
+
+// ==========================================
+// NUEVO MOTOR SAAS: CONEXIÓN A VERCEL
+// ==========================================
+async function verificarPlanSaaS() {
+    try {
+        // Le preguntamos a nuestro nuevo servidor en Vercel
+        const respuesta = await fetch('/api/login');
+        const infoSaaS = await respuesta.json();
+
+        console.log("Servidor dice:", infoSaaS.datos);
+
+        // Guardamos el plan en memoria
+        sessionStorage.setItem('planActual', infoSaaS.datos.plan);
+        
+        // Ejecutamos la función que esconde las cosas
+        aplicarFeatureFlag(infoSaaS.datos.plan);
+
+    } catch (error) {
+        console.error("Error conectando con el servidor SaaS", error);
+    }
+}
+
+function aplicarFeatureFlag(plan) {
+    // Aquí definimos qué ve cada plan (Fácil de cambiar)
+    const permisos = {
+        "START": { mercado: false, reservas: false, salas: false },
+        "PRO":   { mercado: false, reservas: true,  salas: true },
+        "MASTER":{ mercado: true,  reservas: true,  salas: true }
+    };
+
+    const misPermisos = permisos[plan];
+
+    // Ocultamos los módulos si el plan dice "false"
+    // NOTA: Asegúrate de ponerle id="menu-mercado" a tu botón del menú en el crm.html
+    const menuMercado = document.getElementById('menu-mercado');
+    if (menuMercado && misPermisos.mercado === false) {
+        menuMercado.classList.add('hidden');
+    }
+
+    // (Haremos lo mismo para reservas y salas en el siguiente paso)
+}
+
+// Ejecutar apenas cargue la página
+document.addEventListener('DOMContentLoaded', () => {
+    verificarPlanSaaS();
+});
